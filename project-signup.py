@@ -1,3 +1,4 @@
+# ✏️ Placeholder annotation in project-signup.py
 #!/usr/bin/env python3
 """
 Entry point for the PathFinder application.
