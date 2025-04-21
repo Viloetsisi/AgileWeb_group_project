@@ -36,20 +36,23 @@ This application satisfies all required project criteria:
 
 | UWA ID     | Name           | GitHub Username |
 |------------|----------------|------------------|
-| 00115935   | Mengxi Li      | mengxi-dev       |
+
+| 24194872   | Mengxi Li      | Viloetsisi       |
+
 | [UWA ID]   | [Member 2]     | [GitHub2]        |
 | [UWA ID]   | [Member 3]     | [GitHub3]        |
 | [UWA ID]   | [Member 4]     | [GitHub4]        |
 
-> Please replace placeholders with final group member information.
 
----
+
 
 ## 🚀 How to Launch
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-team/pathfinder-app.git
+
+git clone https://github.com/Viloetsisi/AgileWeb_group_project/pathfinder-app.git
+
 cd pathfinder-app
 ```
 
@@ -85,37 +88,38 @@ pytest tests/
 ## 📂 Project Structure
 
 ```
-/pathfinder-app/
+
+
+pathfinder-app/
+├── app.py                   # Main Flask application
+├── project-signup.py        # Entry point for running the app
+├── requirements.txt         # Python dependencies
+├── README.md                # Project overview & instructions
+├── .gitignore               # Files/folders to ignore in Git
+├── LICENSE                  # MIT License
 │
-├── app.py
-├── /templates/
-├── /static/
-├── /tests/
-├── /deliverables/
-├── README.md
-└── requirements.txt
-```
+├── templates/               # HTML templates
+│   ├── base.html            # Base layout (navbar, footer, etc.)
+│   ├── index.html           # Introductory view
+│   ├── upload.html          # Upload Data view
+│   ├── visualize.html       # Visualise Data view
+│   └── share.html           # Share Data view
+│
+├── static/                  # Static assets
+│   ├── css/
+│   │   └── styles.css       # Tailwind overrides or custom styles
+│   ├── js/
+│   │   └── scripts.js       # AJAX calls, interactivity
+│   └── images/              # Logo, placeholders, etc.
+│
+├── tests/                   # Automated tests
+│   ├── conftest.py          # pytest fixtures (e.g. test client)
+│   ├── test_auth.py         # Signup/Login tests
+│   ├── test_upload.py       # Data upload tests
+│   ├── test_visualize.py    # Visualization logic tests
+│   └── test_share.py        # Sharing functionality tests
+│
+└── deliverables/            # Materials for lab presentations
+    ├── gui_design/          # Static HTML/CSS mockups
+    └── demo_prototype/      # Screenshots or small demo notes
 
----
-
-## 📅 Milestones
-
-- ✅ **Week 8 (Apr 28 – May 2)**: Static GUI design (HTML + CSS demo)
-- ✅ **Week 9 (May 5 – 9)**: Working demo with minimal dynamic functionality
-- ✅ **May 16, 11:59pm**: Final project submission
-- ✅ **Week 12**: Project presentation (12-minute demo + Q&A)
-
----
-
-## ✅ Submission Checklist
-
-- [x] `README.md` with purpose, launch/test instructions, group table
-- [x] Complete and commented source code
-- [x] `requirements.txt` generated with `pip freeze > requirements.txt`
-- [x] Deliverables folder with presentation/demo materials
-- [x] No `.git` or virtual environment folders included in the final `.zip`
-- [x] Repository made **public** before submission
-
----
-
-*This project is submitted as part of the unit CITS3403/CITS5505 at the University of Western Australia. All work complies with the provided technical specifications and rubric.*
