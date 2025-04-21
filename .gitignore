@@ -1,9 +1,8 @@
-__pycache__/
+﻿__pycache__/
 *.py[cod]
 venv/
 instance/
 *.db
+*.sqlite3
 .vscode/
-.idea/
 .DS_Store
-*.log
