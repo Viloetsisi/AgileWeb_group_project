@@ -82,15 +82,36 @@ pytest tests/
 ## 📂 Project Structure
 
 ```
-/pathfinder-app/
+pathfinder-app/
+├── app.py                   # Main Flask application
+├── project-signup.py        # Entry point for running the app
+├── requirements.txt         # Python dependencies
+├── README.md                # Project overview & instructions
+├── .gitignore               # Files/folders to ignore in Git
+├── LICENSE                  # MIT License
 │
-├── app.py
-├── /templates/
-├── /static/
-├── /tests/
-├── /deliverables/
-├── README.md
-└── requirements.txt
-```
-
+├── templates/               # HTML templates
+│   ├── base.html            # Base layout (navbar, footer, etc.)
+│   ├── index.html           # Introductory view
+│   ├── upload.html          # Upload Data view
+│   ├── visualize.html       # Visualise Data view
+│   └── share.html           # Share Data view
+│
+├── static/                  # Static assets
+│   ├── css/
+│   │   └── styles.css       # Tailwind overrides or custom styles
+│   ├── js/
+│   │   └── scripts.js       # AJAX calls, interactivity
+│   └── images/              # Logo, placeholders, etc.
+│
+├── tests/                   # Automated tests
+│   ├── conftest.py          # pytest fixtures (e.g. test client)
+│   ├── test_auth.py         # Signup/Login tests
+│   ├── test_upload.py       # Data upload tests
+│   ├── test_visualize.py    # Visualization logic tests
+│   └── test_share.py        # Sharing functionality tests
+│
+└── deliverables/            # Materials for lab presentations
+    ├── gui_design/          # Static HTML/CSS mockups
+    └── demo_prototype/      # Screenshots or small demo notes
 
