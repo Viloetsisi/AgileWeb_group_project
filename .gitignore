@@ -6,3 +6,4 @@ instance/
 *.sqlite3
 .vscode/
 .DS_Store
+uploads/
