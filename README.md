@@ -1,4 +1,5 @@
 
+
 # PathFinder – Student Career Companion
 
 ## 📌 Project Overview
@@ -36,12 +37,10 @@ This application satisfies all required project criteria:
 
 | UWA ID     | Name           | GitHub Username |
 |------------|----------------|------------------|
-
 | 24194872   | Mengxi Li      | Viloetsisi       |
-
-| [UWA ID]   | [Member 2]     | [GitHub2]        |
-| [UWA ID]   | [Member 3]     | [GitHub3]        |
-| [UWA ID]   | [Member 4]     | [GitHub4]        |
+| 23723494   | Lucy Zhi       | Yutong Zhi       |
+| 23734789   | Feiyue Zhang   | Feiyue222        |
+| 23723494   | Kean Scott     | keanscott        |
 
 
 
@@ -122,4 +121,3 @@ pathfinder-app/
 └── deliverables/            # Materials for lab presentations
     ├── gui_design/          # Static HTML/CSS mockups
     └── demo_prototype/      # Screenshots or small demo notes
-
