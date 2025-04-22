@@ -1,3 +1,4 @@
+# ✏️ Placeholder annotation in app.py
 #!/usr/bin/env python3
 """
 app.py: Main Flask application for PathFinder.

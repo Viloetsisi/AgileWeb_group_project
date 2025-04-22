@@ -91,6 +91,7 @@ pytest tests/
 
 pathfinder-app/
 ├── app.py                   # Main Flask application
+├── requirements.txt         # Python dependencies                  
 ├── project-signup.py        # Entry point for running the app
 ├── requirements.txt         # Python dependencies
 ├── README.md                # Project overview & instructions
@@ -102,6 +103,10 @@ pathfinder-app/
 │   ├── index.html           # Introductory view
 │   ├── upload.html          # Upload Data view
 │   ├── visualize.html       # Visualise Data view
+│   ├── login.html           # Login page
+│   ├── signup.html          # Signup page
+│   ├── profile.html         # User profile page
+│   ├── dashboard.html       # Dashboard for visualizing data
 │   └── share.html           # Share Data view
 │
 ├── static/                  # Static assets
