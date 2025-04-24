@@ -148,6 +148,45 @@ def profile():
     return render_template('profile.html', user=user)
 
 # ---------------------------------
+# Job Application API Routes
+# ---------------------------------
+
+@application.route('/api/jobs', methods=['POST'])
+def create_job():
+    """API: Add a new job application"""
+    data = request.get_json()
+    try:
+        job = JobApplication(
+            user_id=data['user_id'],
+            job_title=data['job_title'],
+            company_name=data['company_name'],
+            application_date=datetime.strptime(data['application_date'], "%Y-%m-%d"),
+            status=data['status'],
+            notes=data.get('notes', '')
+        )
+        db.session.add(job)
+        db.session.commit()
+        return jsonify({'message': 'Job added successfully'}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@application.route('/api/jobs/<int:user_id>', methods=['GET'])
+def get_jobs(user_id):
+    """API: Get all job applications for a user"""
+    jobs = JobApplication.query.filter_by(user_id=user_id).all()
+    result = []
+    for job in jobs:
+        result.append({
+            'id': job.id,
+            'job_title': job.job_title,
+            'company_name': job.company_name,
+            'application_date': job.application_date.strftime("%Y-%m-%d"),
+            'status': job.status,
+            'notes': job.notes
+        })
+    return jsonify(result)
+
+# ---------------------------------
 # CLI & App Launch
 # ---------------------------------
 
