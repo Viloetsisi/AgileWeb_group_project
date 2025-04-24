@@ -187,6 +187,29 @@ def get_jobs(user_id):
     return jsonify(result)
 
 # ---------------------------------
+# Job Application Statistics API
+# ---------------------------------
+
+@application.route('/api/stats/<int:user_id>', methods=['GET'])
+def get_job_stats(user_id):
+    """API: Return status counts for a user's job applications"""
+    jobs = JobApplication.query.filter_by(user_id=user_id).all()
+    status_counts = {
+        'applied': 0,
+        'interview': 0,
+        'offer': 0,
+        'rejected': 0
+    }
+
+    for job in jobs:
+        if job.status in status_counts:
+            status_counts[job.status] += 1
+        else:
+            status_counts[job.status] = status_counts.get(job.status, 0) + 1
+
+    return jsonify(status_counts)
+
+# ---------------------------------
 # CLI & App Launch
 # ---------------------------------
 
