@@ -8,6 +8,7 @@ from werkzeug.utils import secure_filename
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 # Initialize Flask application
 application = Flask(__name__)
@@ -108,11 +109,20 @@ def visualize():
 
 @application.route('/share', methods=['GET', 'POST'])
 def share():
-    """Share Data view: allow user to share entries"""
+    # test data for demonstration purposes
+    entries = [
+        type('E', (), {'id': 1, 'filename': 'grades.csv', 'upload_date': datetime.today(), 'shared_with_ids': [2]}),
+        type('E', (), {'id': 2, 'filename': 'resume.pdf', 'upload_date': datetime.today(), 'shared_with_ids': []}),
+    ]
+    all_users = [
+        type('U', (), {'id': 1, 'username': 'alice'}),
+        type('U', (), {'id': 2, 'username': 'bob'}),
+        type('U', (), {'id': 3, 'username': 'carol'}),
+    ]
     if request.method == 'POST':
-        # TODO: handle share logic
-        return redirect(url_for('share'))
-    return render_template('share.html')
+        # handle form submission here…
+        pass
+    return render_template('share.html', entries=entries, all_users=all_users)
 
 @application.route('/dashboard')
 def dashboard():
