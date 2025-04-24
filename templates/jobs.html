@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}My Job Applications{% endblock %}
+
+{% block content %}
+<div class="container mx-auto mt-10 p-6 bg-white rounded-xl shadow-md w-full max-w-4xl">
+    <h2 class="text-2xl font-semibold text-center mb-6">My Job Applications</h2>
+    <table class="min-w-full border text-sm">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="py-2 px-4 border">Job Title</th>
+                <th class="py-2 px-4 border">Company</th>
+                <th class="py-2 px-4 border">Date</th>
+                <th class="py-2 px-4 border">Status</th>
+            </tr>
+        </thead>
+        <tbody id="job-table-body">
+            <!-- Data will be inserted here -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $(document).ready(function () {
+        // 临时设定为 user_id = 1
+        const userId = 1;
+        $.get(`/api/jobs/${userId}`, function (data) {
+            data.forEach(job => {
+                $('#job-table-body').append(`
+                    <tr>
+                        <td class="py-2 px-4 border">${job.job_title}</td>
+                        <td class="py-2 px-4 border">${job.company_name}</td>
+                        <td class="py-2 px-4 border">${job.application_date}</td>
+                        <td class="py-2 px-4 border">${job.status}</td>
+                    </tr>
+                `);
+            });
+        });
+    });
+</script>
+{% endblock %}

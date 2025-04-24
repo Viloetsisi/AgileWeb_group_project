@@ -147,6 +147,11 @@ def profile():
         return redirect(url_for('profile'))
     return render_template('profile.html', user=user)
 
+@application.route('/jobs')
+def jobs():
+    """Render the job table page"""
+    return render_template('jobs.html')
+
 # ---------------------------------
 # Job Application API Routes
 # ---------------------------------
