@@ -1,8 +1,26 @@
-/* ✏️ Placeholder comment on styles.css */
-/* Import TailwindCSS framework */
-@import url('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css');
+/* styles.css - Custom Bootstrap Overrides for PathFinder */
 
-/* Your custom overrides below */
+/* Increase line-height for headings */
 h1, h2, h3 {
   line-height: 1.3;
+}
+
+/* Custom card border radius to match design aesthetic */
+.card {
+  border-radius: 1rem;
+}
+
+/* Enhanced padding for large buttons */
+.btn-lg {
+  padding: 0.75rem 1.25rem;
+}
+
+/* Highlight active navigation link */
+.nav-link.active {
+  font-weight: 600;
+}
+
+/* Footer small text color override */
+footer small {
+  color: #6c757d;
 }
