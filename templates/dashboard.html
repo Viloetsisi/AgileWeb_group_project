@@ -1,46 +1,62 @@
 {% extends "base.html" %}
+
 {% block title %}Dashboard – PathFinder{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-8">
-
-  <h2 class="text-3xl font-bold">Hi, {{ session.get('username', 'User') }}!</h2>
+<div class="container">
+  <h2 class="h3 mb-4">Hi, {{ session.get('username', 'User') }}!</h2>
 
   <!-- Summary Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div class="bg-white p-6 rounded-2xl shadow text-center">
-      <h3 class="text-2xl font-semibold">{{ stats.uploads }}</h3>
-      <p class="text-gray-600">Data Entries Uploaded</p>
+  <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+    <div class="col">
+      <div class="card text-center h-100 shadow-sm">
+        <div class="card-body">
+          <h3 class="display-6">{{ stats.uploads }}</h3>
+          <p class="text-muted">Data Entries Uploaded</p>
+        </div>
+      </div>
     </div>
-    <div class="bg-white p-6 rounded-2xl shadow text-center">
-      <h3 class="text-2xl font-semibold">{{ stats.shared }}</h3>
-      <p class="text-gray-600">Items Shared</p>
+    <div class="col">
+      <div class="card text-center h-100 shadow-sm">
+        <div class="card-body">
+          <h3 class="display-6">{{ stats.shared }}</h3>
+          <p class="text-muted">Items Shared</p>
+        </div>
+      </div>
     </div>
-    <div class="bg-white p-6 rounded-2xl shadow text-center">
-      <h3 class="text-2xl font-semibold">82%</h3>
-      <p class="text-gray-600">Last Job‑Fit Score</p>
+    <div class="col">
+      <div class="card text-center h-100 shadow-sm">
+        <div class="card-body">
+          <h3 class="display-6">82%</h3>
+          <p class="text-muted">Last Job‑Fit Score</p>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- Quick Actions -->
-  <div class="flex space-x-4">
-    <a href="{{ url_for('upload') }}"
-       class="flex-1 bg-blue-600 text-white py-3 rounded-lg text-center hover:bg-blue-700">Upload Data</a>
-    <a href="{{ url_for('visualize') }}"
-       class="flex-1 bg-green-600 text-white py-3 rounded-lg text-center hover:bg-green-700">Visualize Data</a>
-    <a href="{{ url_for('share') }}"
-       class="flex-1 bg-purple-600 text-white py-3 rounded-lg text-center hover:bg-purple-700">Manage Sharing</a>
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <a href="{{ url_for('upload') }}" class="btn btn-primary w-100">Upload Data</a>
+    </div>
+    <div class="col-md-4">
+      <a href="{{ url_for('visualize') }}" class="btn btn-success w-100">Visualize Data</a>
+    </div>
+    <div class="col-md-4">
+      <a href="{{ url_for('share') }}" class="btn btn-warning w-100">Manage Sharing</a>
+    </div>
   </div>
 
   <!-- Recent Activity -->
-  <div class="bg-white p-6 rounded-2xl shadow">
-    <h3 class="text-xl font-semibold mb-4">Recent Activity</h3>
-    <ul class="list-disc list-inside space-y-2 text-gray-700">
+  <div class="card shadow-sm">
+    <div class="card-header">
+      Recent Activity
+    </div>
+    <ul class="list-group list-group-flush">
       {% for item in recent %}
-      <li>{{ item }}</li>
+      <li class="list-group-item">{{ item }}</li>
       {% endfor %}
     </ul>
   </div>
-
 </div>
 {% endblock %}
