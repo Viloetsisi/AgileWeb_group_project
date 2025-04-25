@@ -43,9 +43,12 @@ class User(db.Model):
         return check_password_hash(self.password_hash, password)
 
 class DataEntry(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    filename = db.Column(db.String(120), nullable=False)
+    id                 = db.Column(db.Integer, primary_key=True)
+    user_id            = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    filename           = db.Column(db.String(120), nullable=False)
+    grad_year          = db.Column(db.Integer, nullable=True)
+    interests          = db.Column(db.Text, nullable=True)   # comma-sep or JSON
+    preferred_companies= db.Column(db.Text, nullable=True)
 
 class SharedEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -139,21 +142,35 @@ def logout():
 
 @application.route('/upload', methods=['GET', 'POST'])
 def upload():
-    """Upload view"""
     if request.method == 'POST':
         file = request.files.get('data_file')
-        desc = request.form.get('description', '')
-        if file and file.filename:
-            filename = secure_filename(file.filename)
-            save_path = os.path.join('uploads', filename)
-            os.makedirs('uploads', exist_ok=True)
-            file.save(save_path)
-            entry = DataEntry(user_id=1, filename=save_path)
-            db.session.add(entry)
-            db.session.commit()
-            flash('File uploaded successfully!', 'success')
-            return redirect(url_for('dashboard'))
-        flash('Please select a file to upload', 'error')
+        if not file or not file.filename:
+            flash('Please select a file to upload', 'error')
+            return redirect(url_for('upload'))
+
+        # save file
+        filename = secure_filename(file.filename)
+        os.makedirs(application.config.get('UPLOAD_FOLDER','uploads'), exist_ok=True)
+        save_path = os.path.join(application.config['UPLOAD_FOLDER'], filename)
+        file.save(save_path)
+
+        # collect metadata
+        grad_year = request.form.get('grad_year', type=int)
+        interests = request.form.getlist('interests')    # returns list
+        preferred = request.form.get('preferred_companies', '')
+
+        entry = DataEntry(
+            user_id=current_user.id,    # assuming having login/session
+            filename=save_path,
+            grad_year=grad_year,
+            interests=','.join(interests),
+            preferred_companies=preferred
+        )
+        db.session.add(entry)
+        db.session.commit()
+        flash('Your resume and profile details have been saved!', 'success')
+        return redirect(url_for('dashboard'))
+
     return render_template('upload.html')
 
 @application.route('/visualize')
