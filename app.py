@@ -269,4 +269,4 @@ def get_job_stats(user_id):
 if __name__ == '__main__':
     with application.app_context():
         db.create_all()
-    application.run(host='0.0.0.0', port=5000, debug=True)
+    application.run(host='127.0.0.1:5000', port=5000, debug=True)
