@@ -6,7 +6,8 @@ app.py: Main Flask application for PathFinder.
 import os
 from datetime import datetime
 from werkzeug.utils import secure_filename
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 
 # ---------------------------------
@@ -32,7 +33,13 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=True)
-    password = db.Column(db.String(120), nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
 class DataEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -67,19 +74,45 @@ def index():
     """Introductory view: homepage with signup/login links"""
     return render_template('index.html')
 
-@application.route('/signup', methods=['GET', 'POST'])
+@application.route('/signup', methods=['POST'])
 def signup():
     """Signup view"""
-    if request.method == 'POST':
-        return redirect(url_for('index'))
-    return render_template('signup.html')
+    data = request.get_json()
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
 
-@application.route('/login', methods=['GET', 'POST'])
+    if User.query.filter((User.username==username)|(User.email==email)).first():
+        return jsonify({'status': 'error', 'message': 'User already exists'}), 409
+    
+    new_user = User(username=username, email=email)
+    new_user.set_password(password)
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify({'status': 'success', 'message': 'Registration successful'}), 201
+    
+
+@application.route('/login', methods=['POST'])
 def login():
-    """Login view"""
-    if request.method == 'POST':
-        return redirect(url_for('index'))
-    return render_template('login.html')
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+
+    user = User.query.filter_by(email=email).first()
+
+    if user and user.check_password(password):
+        session['user_id'] = user.id
+        return jsonify({'status': 'success', 'message': 'Login successful'}), 200
+    
+    return jsonify({'status': 'error', 'message': 'Invalid credentials'}), 401
+
+
+@application.route('/logout', methods=['POST'])
+def logout():
+    session.pop('user_id', None)
+    return jsonify({'status': 'success', 'message': 'Logout successful'}), 200
+
 
 @application.route('/upload', methods=['GET', 'POST'])
 def upload():
