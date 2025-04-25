@@ -9,6 +9,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import IntegrityError
 
 # ---------------------------------
 # Application Initialization
@@ -77,24 +78,37 @@ def index():
 @application.route('/signup', methods=['POST'])
 def signup():
     """Signup view"""
+
     data = request.get_json()
+
     username = data.get('username')
     email = data.get('email')
     password = data.get('password')
 
-    if User.query.filter((User.username==username)|(User.email==email)).first():
-        return jsonify({'status': 'error', 'message': 'User already exists'}), 409
-    
-    new_user = User(username=username, email=email)
-    new_user.set_password(password)
-    db.session.add(new_user)
-    db.session.commit()
+    # Backend validation
+    if not username or not email or not password:
+        return jsonify({'message': 'All fields are required.'}), 400
 
-    return jsonify({'status': 'success', 'message': 'Registration successful'}), 201
+    if len(password) < 6:
+        return jsonify({'message': 'Password must be at least 6 characters.'}), 400
+
+    new_user = User(username=username, email=email, password_hash=generate_password_hash(password))
+
+    try:
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify({'message': 'Registration successful!'}), 201
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({'message': 'Username or email already exists.'}), 409
+    except Exception as e:
+        return jsonify({'message': 'Server error: ' + str(e)}), 500
     
 
 @application.route('/login', methods=['POST'])
 def login():
+    """Login view"""
+    
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
@@ -110,6 +124,7 @@ def login():
 
 @application.route('/logout', methods=['POST'])
 def logout():
+    """Logout view"""
     session.pop('user_id', None)
     return jsonify({'status': 'success', 'message': 'Logout successful'}), 200
 
