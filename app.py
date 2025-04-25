@@ -16,13 +16,12 @@ from sqlalchemy.exc import IntegrityError
 # ---------------------------------
 
 application = Flask(__name__)
-application.config['SECRET_KEY'] = os.environ.get(
-    'SECRET_KEY', 'change_this_to_a_secure_random_key'
-)
-application.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
-    'DATABASE_URL', 'sqlite:///pathfinder.db'
-)
+application.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'change_this_to_a_secure_random_key')
+application.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///pathfinder.db')
 application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+application.config['UPLOAD_FOLDER'] = 'uploads'
+
+os.makedirs(application.config['UPLOAD_FOLDER'], exist_ok=True)
 
 db = SQLAlchemy(application)
 
@@ -33,264 +32,210 @@ db = SQLAlchemy(application)
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=True)
-    password_hash = db.Column(db.String(128), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(128), nullable=False)
+    registered_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-    
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+    profile = db.relationship("Profile", backref="user", uselist=False)
+    documents = db.relationship("Document", backref="user", lazy=True)
 
-class DataEntry(db.Model):
-    id                 = db.Column(db.Integer, primary_key=True)
-    user_id            = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    filename           = db.Column(db.String(120), nullable=False)
-    grad_year          = db.Column(db.Integer, nullable=True)
-    interests          = db.Column(db.Text, nullable=True)   # comma-sep or JSON
-    preferred_companies= db.Column(db.Text, nullable=True)
-
-class SharedEntry(db.Model):
+class Profile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    data_id = db.Column(db.Integer, db.ForeignKey('data_entry.id'), nullable=False)
-    shared_with_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
 
-# Job application model (added by Feiyue)
-class JobApplication(db.Model):
-    __tablename__ = 'job_applications'
+    full_name = db.Column(db.String(120))
+    age = db.Column(db.Integer)
+    birth_date = db.Column(db.Date)
+    education = db.Column(db.String(100))
+    graduation_date = db.Column(db.Date)
+    school = db.Column(db.String(200))
+    expected_company = db.Column(db.String(200))
+    career_goal = db.Column(db.String(200))
+    self_description = db.Column(db.Text)
+    internship_experience = db.Column(db.Text)
+    is_shared = db.Column(db.Boolean, default=False)
 
+class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    job_title = db.Column(db.String(120), nullable=False)
-    company_name = db.Column(db.String(120), nullable=False)
-    application_date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
-    status = db.Column(db.String(50), nullable=False)
-    notes = db.Column(db.Text)
 
-    user = db.relationship('User', backref='applications')
+    file_name = db.Column(db.String(200))
+    file_path = db.Column(db.String(300))
+    file_type = db.Column(db.String(50))
+    upload_time = db.Column(db.DateTime, default=datetime.utcnow)
+    is_shared = db.Column(db.Boolean, default=False)
 
-# ---------------------------------
-# Application Routes
-# ---------------------------------
-
-@application.route('/')
-def index():
-    """Introductory view: homepage with signup/login links"""
-    return render_template('index.html')
-
-
-@application.route('/signup', methods=['GET'])
-def signup_get():
-    return render_template('signup.html')
-
-
-@application.route('/signup', methods=['POST'])
+# ------------------------------
+# Signup Route
+# ------------------------------
+@application.route('/signup', methods=['GET', 'POST'])
 def signup():
-    data = request.get_json()
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        confirm = request.form['confirm']
 
-    username = data.get('username')
-    email = data.get('email')
-    password = data.get('password')
+        if password != confirm:
+            flash("Passwords do not match.", "danger")
+            return redirect(url_for('signup'))
 
-    # Basic validation
-    if not username or not email or not password:
-        return jsonify({'message': 'All fields are required.'}), 400
+        existing_user = User.query.filter((User.username == username) | (User.email == email)).first()
+        if existing_user:
+            flash("Username or email already exists.", "danger")
+            return redirect(url_for('signup'))
 
-    if len(password) < 6:
-        return jsonify({'message': 'Password must be at least 6 characters.'}), 400
-
-    new_user = User(username=username, email=email)
-    new_user.set_password(password)
-
-    try:
+        hashed_password = generate_password_hash(password)
+        new_user = User(username=username, email=email, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
-        return jsonify({'message': 'Registration successful!'}), 201
-    except IntegrityError:
-        db.session.rollback()
-        return jsonify({'message': 'Username or email already exists.'}), 409
-    except Exception as e:
-        return jsonify({'message': 'Server error: ' + str(e)}), 500
-    
-@application.route('/login', methods=['GET'])
-def login_get():
+        flash("Account created successfully. Please log in.", "success")
+        return redirect(url_for('login'))
+
+    return render_template('signup.html')
+
+# ------------------------------
+# Login Route
+# ------------------------------
+@application.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        identifier = request.form['identifier']
+        password = request.form['password']
+
+        user = User.query.filter((User.username == identifier) | (User.email == identifier)).first()
+        if user and check_password_hash(user.password, password):
+            session['user_id'] = user.id
+            flash("Login successful.", "success")
+            return redirect(url_for('dashboard'))
+        else:
+            flash("Invalid username/email or password.", "danger")
+            return redirect(url_for('login'))
+
     return render_template('login.html')
 
-@application.route('/login', methods=['POST'])
-def login():
-    """Login view"""
-    
-    data = request.get_json()
-    email = data.get('email')
-    password = data.get('password')
+# ------------------------------
+# Combined Profile and File Upload API
+# ------------------------------
+@application.route('/api/profile-and-documents', methods=['POST'])
+def profile_and_documents():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'User not logged in'}), 401
 
-    user = User.query.filter_by(email=email).first()
+    profile = Profile.query.filter_by(user_id=user_id).first()
+    if not profile:
+        profile = Profile(user_id=user_id)
 
-    if user and user.check_password(password):
-        session['user_id'] = user.id
-        return jsonify({'status': 'success', 'message': 'Login successful'}), 200
-    
-    return jsonify({'status': 'error', 'message': 'Invalid credentials'}), 401
+    profile.full_name = request.form.get('full_name')
+    profile.age = request.form.get('age', type=int)
+    profile.birth_date = request.form.get('birth_date')
+    profile.education = request.form.get('education')
+    profile.graduation_date = request.form.get('graduation_date')
+    profile.school = request.form.get('school')
+    profile.expected_company = request.form.get('expected_company')
+    profile.career_goal = request.form.get('career_goal')
+    profile.self_description = request.form.get('self_description')
+    profile.internship_experience = request.form.get('internship_experience')
+    profile.is_shared = request.form.get('is_shared') == 'true'
 
+    db.session.add(profile)
 
-@application.route('/logout', methods=['POST'])
-def logout():
-    """Logout view"""
-    session.pop('user_id', None)
-    return jsonify({'status': 'success', 'message': 'Logout successful'}), 200
+    files = request.files.getlist('files')
+    file_types = request.form.getlist('file_type')
+    shares = request.form.getlist('file_shared')
 
+    for i, file in enumerate(files):
+        if file.filename:
+            filename = secure_filename(file.filename)
+            path = os.path.join(application.config['UPLOAD_FOLDER'], filename)
+            file.save(path)
 
-@application.route('/upload', methods=['GET', 'POST'])
-def upload():
-    if request.method == 'POST':
-        file = request.files.get('data_file')
-        if not file or not file.filename:
-            flash('Please select a file to upload', 'error')
-            return redirect(url_for('upload'))
+            document = Document(
+                user_id=user_id,
+                file_name=filename,
+                file_path=path,
+                file_type=file_types[i] if i < len(file_types) else 'unknown',
+                is_shared=(shares[i] == 'true') if i < len(shares) else False
+            )
+            db.session.add(document)
 
-        # save file
-        filename = secure_filename(file.filename)
-        os.makedirs(application.config.get('UPLOAD_FOLDER','uploads'), exist_ok=True)
-        save_path = os.path.join(application.config['UPLOAD_FOLDER'], filename)
-        file.save(save_path)
+    db.session.commit()
+    return jsonify({'message': 'Profile and documents saved successfully'}), 201
 
-        # collect metadata
-        grad_year = request.form.get('grad_year', type=int)
-        interests = request.form.getlist('interests')    # returns list
-        preferred = request.form.get('preferred_companies', '')
+# ------------------------------
+# API for Matching System to Fetch User Data
+# ------------------------------
+@application.route('/api/profile-data/<int:user_id>', methods=['GET'])
+def get_profile_data(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
 
-        entry = DataEntry(
-            user_id=current_user.id,    # assuming having login/session
-            filename=save_path,
-            grad_year=grad_year,
-            interests=','.join(interests),
-            preferred_companies=preferred
-        )
-        db.session.add(entry)
-        db.session.commit()
-        flash('Your resume and profile details have been saved!', 'success')
-        return redirect(url_for('dashboard'))
+    profile = Profile.query.filter_by(user_id=user_id).first()
+    documents = Document.query.filter_by(user_id=user_id).all()
 
-    return render_template('upload.html')
+    profile_data = {
+        'full_name': profile.full_name if profile else '',
+        'age': profile.age if profile else '',
+        'education': profile.education if profile else '',
+        'expected_company': profile.expected_company if profile else '',
+        'career_goal': profile.career_goal if profile else '',
+        'self_description': profile.self_description if profile else '',
+        'internship_experience': profile.internship_experience if profile else '',
+        'is_shared': profile.is_shared if profile else False
+    }
 
-@application.route('/visualize')
-def visualize():
-    """Visualise Data view"""
-    return render_template('visualize.html')
-
-@application.route('/share', methods=['GET', 'POST'])
-def share():
-    """Share Data view"""
-    entries = [
-        type('E', (), {'id': 1, 'filename': 'grades.csv', 'upload_date': datetime.today(), 'shared_with_ids': [2]}),
-        type('E', (), {'id': 2, 'filename': 'resume.pdf', 'upload_date': datetime.today(), 'shared_with_ids': []}),
+    docs = [
+        {
+            'file_name': d.file_name,
+            'file_type': d.file_type,
+            'is_shared': d.is_shared
+        }
+        for d in documents
     ]
-    all_users = [
-        type('U', (), {'id': 1, 'username': 'alice'}),
-        type('U', (), {'id': 2, 'username': 'bob'}),
-        type('U', (), {'id': 3, 'username': 'carol'}),
-    ]
-    if request.method == 'POST':
-        pass
-    return render_template('share.html', entries=entries, all_users=all_users)
+
+    return jsonify({
+        'user_id': user.id,
+        'username': user.username,
+        'email': user.email,
+        'profile': profile_data,
+        'documents': docs
+    })
+
+# ------------------------------
+# User Profile Display Page
+# ------------------------------
+@application.route('/profile')
+def profile_view():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+
+    user = User.query.get(user_id)
+    profile = Profile.query.filter_by(user_id=user_id).first()
+    documents = Document.query.filter_by(user_id=user_id).all()
+
+    return render_template('profile.html', user=user, profile=profile, documents=documents)
+
+# ------------------------------
+# Home / Dashboard
+# ------------------------------
+@application.route('/')
+def index():
+    return redirect(url_for('login'))
 
 @application.route('/dashboard')
 def dashboard():
-    """Dashboard view"""
-    stats = {
-        'uploads': DataEntry.query.count(),
-        'shared': SharedEntry.query.count(),
-    }
-    recent = [
-        "Uploaded grades.csv 10 minutes ago",
-        "Shared 'Resume v1' with alice@example.com",
-    ]
-    return render_template('dashboard.html', stats=stats, recent=recent)
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+    user = User.query.get(user_id)
+    return f"Welcome, {user.username}! (dashboard content to be implemented)"
 
-@application.route('/profile', methods=['GET', 'POST'])
-def profile():
-    """Profile view"""
-    user = User.query.first()
-    if user is None:
-        return redirect(url_for('signup'))
-    if request.method == 'POST':
-        user.username = request.form['username']
-        user.email = request.form['email']
-        db.session.commit()
-        return redirect(url_for('profile'))
-    return render_template('profile.html', user=user)
-
-@application.route('/jobs')
-def jobs():
-    """Render the job table page"""
-    return render_template('jobs.html')
-
-# ---------------------------------
-# Job Application API Routes
-# ---------------------------------
-
-@application.route('/api/jobs', methods=['POST'])
-def create_job():
-    """API: Add a new job application"""
-    data = request.get_json()
-    try:
-        job = JobApplication(
-            user_id=data['user_id'],
-            job_title=data['job_title'],
-            company_name=data['company_name'],
-            application_date=datetime.strptime(data['application_date'], "%Y-%m-%d"),
-            status=data['status'],
-            notes=data.get('notes', '')
-        )
-        db.session.add(job)
-        db.session.commit()
-        return jsonify({'message': 'Job added successfully'}), 201
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
-
-@application.route('/api/jobs/<int:user_id>', methods=['GET'])
-def get_jobs(user_id):
-    """API: Get all job applications for a user"""
-    jobs = JobApplication.query.filter_by(user_id=user_id).all()
-    result = []
-    for job in jobs:
-        result.append({
-            'id': job.id,
-            'job_title': job.job_title,
-            'company_name': job.company_name,
-            'application_date': job.application_date.strftime("%Y-%m-%d"),
-            'status': job.status,
-            'notes': job.notes
-        })
-    return jsonify(result)
-
-# ---------------------------------
-# Job Application Statistics API
-# ---------------------------------
-
-@application.route('/api/stats/<int:user_id>', methods=['GET'])
-def get_job_stats(user_id):
-    """API: Return status counts for a user's job applications"""
-    jobs = JobApplication.query.filter_by(user_id=user_id).all()
-    status_counts = {
-        'applied': 0,
-        'interview': 0,
-        'offer': 0,
-        'rejected': 0
-    }
-
-    for job in jobs:
-        if job.status in status_counts:
-            status_counts[job.status] += 1
-        else:
-            status_counts[job.status] = status_counts.get(job.status, 0) + 1
-
-    return jsonify(status_counts)
-
-# ---------------------------------
-# CLI & App Launch
-# ---------------------------------
-
+# ------------------------------
+# Initialize Database
+# ------------------------------
 if __name__ == '__main__':
     with application.app_context():
         db.create_all()
