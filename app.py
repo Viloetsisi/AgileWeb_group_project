@@ -75,24 +75,29 @@ def index():
     """Introductory view: homepage with signup/login links"""
     return render_template('index.html')
 
+
+@application.route('/signup', methods=['GET'])
+def signup_get():
+    return render_template('signup.html')
+
+
 @application.route('/signup', methods=['POST'])
 def signup():
-    """Signup view"""
-
     data = request.get_json()
 
     username = data.get('username')
     email = data.get('email')
     password = data.get('password')
 
-    # Backend validation
+    # Basic validation
     if not username or not email or not password:
         return jsonify({'message': 'All fields are required.'}), 400
 
     if len(password) < 6:
         return jsonify({'message': 'Password must be at least 6 characters.'}), 400
 
-    new_user = User(username=username, email=email, password_hash=generate_password_hash(password))
+    new_user = User(username=username, email=email)
+    new_user.set_password(password)
 
     try:
         db.session.add(new_user)
@@ -104,6 +109,9 @@ def signup():
     except Exception as e:
         return jsonify({'message': 'Server error: ' + str(e)}), 500
     
+@application.route('/login', methods=['GET'])
+def login_get():
+    return render_template('login.html')
 
 @application.route('/login', methods=['POST'])
 def login():
@@ -269,4 +277,4 @@ def get_job_stats(user_id):
 if __name__ == '__main__':
     with application.app_context():
         db.create_all()
-    application.run(host='127.0.0.1:5000', port=5000, debug=True)
+    application.run(host='0.0.0.0', port=5000, debug=True)
