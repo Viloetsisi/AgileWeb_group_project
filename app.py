@@ -117,19 +117,20 @@ def login_get():
     return render_template('login.html')
 
 @application.route('/login', methods=['POST'])
-def login_post():
+def login():
+    """Login view"""
+    
     data = request.get_json()
-
     email = data.get('email')
     password = data.get('password')
 
     user = User.query.filter_by(email=email).first()
 
     if user and user.check_password(password):
-        session['user_id'] = user.id  # User is now logged in
-        return jsonify({'message': 'Login successful!'}), 200
+        session['user_id'] = user.id
+        return jsonify({'status': 'success', 'message': 'Login successful'}), 200
     
-    return jsonify({'message': 'Invalid email or password.'}), 401
+    return jsonify({'status': 'error', 'message': 'Invalid credentials'}), 401
 
 
 @application.route('/logout', methods=['POST'])
