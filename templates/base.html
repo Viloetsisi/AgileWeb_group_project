@@ -23,15 +23,30 @@
       </button>
       <div class="collapse navbar-collapse" id="navMenu">
         <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a class="nav-link{% if request.endpoint == 'jobs' %} active{% endif %}" href="{{ url_for('jobs') }}">My Jobs</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link{% if request.endpoint == 'signup' %} active{% endif %}" href="{{ url_for('signup') }}">Sign Up</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link{% if request.endpoint == 'login' %} active{% endif %}" href="{{ url_for('login') }}">Log In</a>
-          </li>
+          {% if session.get('user_id') %}
+            <li class="nav-item">
+              <a class="nav-link{% if request.endpoint == 'dashboard' %} active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link{% if request.endpoint == 'profile_view' or request.endpoint=='profile' %} active{% endif %}" href="{{ url_for('profile_view') }}">My Profile</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link{% if request.endpoint == 'jobs' %} active{% endif %}" href="{{ url_for('jobs') }}">My Jobs</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link{% if request.endpoint == 'jobs' %} active{% endif %}" href="{{ url_for('jobs') }}">My Jobs</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link{% if request.endpoint == 'signup' %} active{% endif %}" href="{{ url_for('signup') }}">Sign Up</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link{% if request.endpoint == 'login' %} active{% endif %}" href="{{ url_for('login') }}">Log In</a>
+            </li>
+          {% endif %}
         </ul>
       </div>
     </div>
@@ -60,7 +75,7 @@
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
   {% elif request.endpoint == 'visualize' %}
     <script src="{{ url_for('static', filename='js/visualize.js') }}"></script>
-  {% elif request.endpoint == 'profile' %}
+  {% elif request.endpoint == 'profile_view' or request.endpoint=='profile' %}
     <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
   {% endif %}
   {% endblock %}
