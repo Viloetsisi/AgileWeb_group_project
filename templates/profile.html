@@ -1,27 +1,53 @@
 {% extends "base.html" %}
-
-{% block title %}Profile – PathFinder{% endblock %}
+{% block title %}My Profile – PathFinder{% endblock %}
 
 {% block content %}
 <div class="container-sm bg-white p-4 rounded shadow-sm">
-  <h2 class="h3 text-center mb-4">Your Profile</h2>
-  <form action="{{ url_for('profile') }}" method="post">
-    <div class="mb-3">
-      <label for="username" class="form-label">Username</label>
-      <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
-    </div>
-    <div class="mb-3">
-      <label for="email" class="form-label">Email</label>
-      <input type="email" class="form-control" id="email" name="email" value="{{ user.email or '' }}">
-    </div>
-    <div class="mb-3">
-      <label for="password" class="form-label">New Password</label>
-      <input type="password" class="form-control" id="password" name="password" placeholder="••••••••">
-    </div>
-    <button type="submit" class="btn btn-primary w-100">Save Changes</button>
-  </form>
-  <p class="text-center text-muted mt-3">
-    <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
-  </p>
+  <h2 class="h3 mb-4">My Profile</h2>
+
+  <dl class="row mb-4">
+    <dt class="col-sm-3">Full Name</dt>
+    <dd class="col-sm-9">{{ profile.full_name or '—' }}</dd>
+
+    <dt class="col-sm-3">Age</dt>
+    <dd class="col-sm-9">{{ profile.age or '—' }}</dd>
+
+    <dt class="col-sm-3">Birth Date</dt>
+    <dd class="col-sm-9">{{ profile.birth_date or '—' }}</dd>
+
+    <dt class="col-sm-3">Education</dt>
+    <dd class="col-sm-9">{{ profile.education or '—' }}</dd>
+
+    <dt class="col-sm-3">School</dt>
+    <dd class="col-sm-9">{{ profile.school or '—' }}</dd>
+
+    <dt class="col-sm-3">Graduation Date</dt>
+    <dd class="col-sm-9">{{ profile.graduation_date or '—' }}</dd>
+
+    <dt class="col-sm-3">Career Goal</dt>
+    <dd class="col-sm-9">{{ profile.career_goal or '—' }}</dd>
+
+    <dt class="col-sm-3">About Me</dt>
+    <dd class="col-sm-9">{{ profile.self_description or '—' }}</dd>
+
+    <dt class="col-sm-3">Internship Exp.</dt>
+    <dd class="col-sm-9">{{ profile.internship_experience or '—' }}</dd>
+  </dl>
+
+  <h3 class="h5 mb-3">My Documents</h3>
+  {% if documents %}
+    <ul class="list-group mb-3">
+      {% for doc in documents %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        {{ doc.file_name }}
+        <a href="{{ url_for('static', filename=doc.file_path.split('/',1)[1]) }}" target="_blank" class="btn btn-sm btn-outline-primary">Download</a>
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-muted">No documents uploaded yet.</p>
+  {% endif %}
+
+  <a href="{{ url_for('upload') }}" class="btn btn-primary">Edit Profile & Upload More</a>
 </div>
 {% endblock %}
