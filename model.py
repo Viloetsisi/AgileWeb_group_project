@@ -1,53 +1,74 @@
+# model.py
+
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 
+# Initialize the shared SQLAlchemy object
 db = SQLAlchemy()
 
 # ------------------------------
-# 用户账户模型
+# User account model
 # ------------------------------
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(128), nullable=False)
-    registered_at = db.Column(db.DateTime, default=datetime.utcnow)
+    __tablename__ = 'users'
 
-    profile = db.relationship("Profile", backref="user", uselist=False)
-    documents = db.relationship("Document", backref="user", lazy=True)
+    id            = db.Column(db.Integer,    primary_key=True)
+    username      = db.Column(db.String(80), unique=True, nullable=False)
+    email         = db.Column(db.String(120), unique=True, nullable=False)
+    password      = db.Column(db.String(128), nullable=False)
+    registered_at = db.Column(db.DateTime,   default=datetime.utcnow)
 
+    # One-to-one relationship to Profile, one-to-many to Document
+    profile   = db.relationship("Profile",  back_populates="user", uselist=False)
+    documents = db.relationship("Document", back_populates="user", lazy=True)
+
+    def __repr__(self):
+        return f"<User {self.username!r}>"
 
 # ------------------------------
-# 用户填写的详细资料
+# Detailed profile information entered by the user
 # ------------------------------
 class Profile(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
+    __tablename__ = 'profiles'
 
-    full_name = db.Column(db.String(120))           # 姓名
-    age = db.Column(db.Integer)                     # 年龄
-    birth_date = db.Column(db.Date)                 # 出生年月日
-    education = db.Column(db.String(100))           # 学历
-    graduation_date = db.Column(db.Date)            # 毕业时间
-    school = db.Column(db.String(200))              # 毕业学校
-    expected_company = db.Column(db.String(200))    # 期望公司
-    career_goal = db.Column(db.String(200))         # 期望职位方向
-    self_description = db.Column(db.Text)           # 自我介绍
-    internship_experience = db.Column(db.Text)      # 实习经历
+    id                    = db.Column(db.Integer, primary_key=True)
+    user_id               = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, unique=True)
 
-    is_shared = db.Column(db.Boolean, default=False)  # 是否愿意公开资料给他人
+    full_name             = db.Column(db.String(120))    # Full name
+    age                   = db.Column(db.Integer)        # Age
+    birth_date            = db.Column(db.Date)           # Date of birth
+    education             = db.Column(db.String(100))    # Highest education level
+    graduation_date       = db.Column(db.Date)           # Graduation date
+    school                = db.Column(db.String(200))    # University or school
+    expected_company      = db.Column(db.String(200))    # Desired company
+    career_goal           = db.Column(db.String(200))    # Target career path
+    self_description      = db.Column(db.Text)          # Personal bio or summary
+    internship_experience = db.Column(db.Text)          # Internship details
 
+    is_shared             = db.Column(db.Boolean, default=False)  # Whether profile is shareable
+
+    user = db.relationship("User", back_populates="profile")
+
+    def __repr__(self):
+        return f"<Profile user_id={self.user_id}>"
 
 # ------------------------------
-# 用户上传的 PDF 文件（证书、奖状）
+# User-uploaded documents (certificates, awards, etc.)
 # ------------------------------
 class Document(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    __tablename__ = 'documents'
 
-    file_name = db.Column(db.String(200))           # 显示名称
-    file_path = db.Column(db.String(300))           # 实际存储路径
-    file_type = db.Column(db.String(50))            # 类型：证书/奖项/实习证明等
-    upload_time = db.Column(db.DateTime, default=datetime.utcnow)
+    id          = db.Column(db.Integer,    primary_key=True)
+    user_id     = db.Column(db.Integer,    db.ForeignKey('users.id'), nullable=False)
 
-    is_shared = db.Column(db.Boolean, default=False)  # 是否公开此文件
+    file_name   = db.Column(db.String(200))  # Display name of the file
+    file_path   = db.Column(db.String(300))  # Actual storage path on disk
+    file_type   = db.Column(db.String(50))   # Type (e.g., certificate, award)
+    upload_time = db.Column(db.DateTime,     default=datetime.utcnow)
+
+    is_shared   = db.Column(db.Boolean,      default=False)  # Whether document is shareable
+
+    user = db.relationship("User", back_populates="documents")
+
+    def __repr__(self):
+        return f"<Document {self.file_name!r} of user {self.user_id}>"
