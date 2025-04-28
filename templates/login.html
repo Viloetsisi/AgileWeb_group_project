@@ -5,6 +5,7 @@
 {% block content %}
 <div class="container-sm bg-white p-4 rounded shadow-sm">
   <h2 class="h3 text-center mb-4">Welcome Back</h2>
+  <form action="{{ url_for('login') }}" method="post">
     <div class="mb-3">
       <label for="username" class="form-label">Username or Email</label>
       <input type="text" class="form-control" id="username" name="username" required>
