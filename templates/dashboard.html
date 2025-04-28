@@ -7,12 +7,12 @@
   <h2 class="h3 mb-4">Hi, {{ session.get('username', 'User') }}!</h2>
 
   <!-- Summary Cards -->
-  <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+  <div class="row row-cols-1 row-cols-md-4 g-4 mb-4">
     <div class="col">
       <div class="card text-center h-100 shadow-sm">
         <div class="card-body">
           <h3 class="display-6">{{ stats.uploads }}</h3>
-          <p class="text-muted">Data Entries Uploaded</p>
+          <p class="text-muted">Documents Uploaded</p>
         </div>
       </div>
     </div>
@@ -27,8 +27,16 @@
     <div class="col">
       <div class="card text-center h-100 shadow-sm">
         <div class="card-body">
-          <h3 class="display-6">82%</h3>
-          <p class="text-muted">Last Job‑Fit Score</p>
+          <h3 class="display-6">{{ stats.applications }}</h3>
+          <p class="text-muted">Job Applications</p>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card text-center h-100 shadow-sm">
+        <div class="card-body">
+          <h3 class="display-6">{{ stats.fit_score }}%</h3>
+          <p class="text-muted">Last Job-Fit Score</p>
         </div>
       </div>
     </div>
@@ -36,27 +44,59 @@
 
   <!-- Quick Actions -->
   <div class="row g-3 mb-4">
-    <div class="col-md-4">
+    <div class="col-md-3">
       <a href="{{ url_for('upload') }}" class="btn btn-primary w-100">Upload Data</a>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
       <a href="{{ url_for('visualize') }}" class="btn btn-success w-100">Visualize Data</a>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
       <a href="{{ url_for('share') }}" class="btn btn-warning w-100">Manage Sharing</a>
+    </div>
+    <div class="col-md-3">
+      <a href="{{ url_for('jobs') }}" class="btn btn-info w-100">My Career</a>
     </div>
   </div>
 
-  <!-- Recent Activity -->
-  <div class="card shadow-sm">
-    <div class="card-header">
-      Recent Activity
-    </div>
+  <!-- Recent Data Activity -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header">Recent Data Activity</div>
     <ul class="list-group list-group-flush">
       {% for item in recent %}
-      <li class="list-group-item">{{ item }}</li>
+        <li class="list-group-item">{{ item }}</li>
+      {% else %}
+        <li class="list-group-item text-muted">No recent activity.</li>
       {% endfor %}
     </ul>
+  </div>
+
+  <!-- Recent Job Applications -->
+  <div class="card shadow-sm">
+    <div class="card-header">Recent Job Applications</div>
+    <div class="table-responsive">
+      <table class="table mb-0">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Position</th>
+            <th scope="col">Company</th>
+            <th scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for app in (job_apps|default([]))[:5] %}
+          <tr>
+            <td>{{ app.application_date.strftime('%Y-%m-%d') }}</td>
+            <td>{{ app.job_title }}</td>
+            <td>{{ app.company_name }}</td>
+            <td>{{ app.status.capitalize() }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="text-center text-muted">No recent applications.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 {% endblock %}
