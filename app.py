@@ -4,6 +4,8 @@ app.py: Main Flask application for PathFinder.
 """
 import os
 from datetime import datetime
+from urllib.parse import urljoin
+import secrets
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import (
@@ -11,16 +13,17 @@ from flask import (
     redirect, url_for, flash,
     session, jsonify
 )
-from model import db, User, Profile, Document
-from flask_mail import Mail
-from reset_models import PasswordResetToken
+from model import db, User, Profile, Document, PasswordResetToken
+from flask_mail import Mail, Message
+
 # ---------------------------------
 # Application Initialization
 # ---------------------------------
 application = Flask(__name__)
+DB_PATH = os.path.join(application.root_path, "pathfinder.db")
 application.config.update({
     'SECRET_KEY': os.environ.get('SECRET_KEY', 'change_this_to_a_secure_random_key'),
-    'SQLALCHEMY_DATABASE_URI': os.environ.get('DATABASE_URL', 'sqlite:///pathfinder.db'),
+    'SQLALCHEMY_DATABASE_URI': os.environ.get('DATABASE_URL', f'sqlite:///{DB_PATH}'),
     'SQLALCHEMY_TRACK_MODIFICATIONS': False,
     'UPLOAD_FOLDER': os.path.join(application.root_path, 'uploads')
 })
@@ -31,7 +34,9 @@ application.config.update(
     MAIL_PORT=1025,
     MAIL_USERNAME='',
     MAIL_PASSWORD='',
-    MAIL_SUPPRESS_SEND=True # TODO Remove for production!!
+    MAIL_DEFAULT_SENDER=('PathFinder', 'no-reply@pathfinder.local'),
+    MAIL_SUPPRESS_SEND = False,
+    MAIL_BACKEND = 'console'
 )
 mail = Mail(application)
 
@@ -96,10 +101,74 @@ def logout():
 # Forgot Password
 # ---------------------------------
 
+def _send_reset_email(user, token_row):
+    link = urljoin(
+        request.url_root,
+        url_for('reset_get', token=token_row.token)
+    )
+    msg = Message(
+        subject="PathFinder password reset",
+        recipients=[user.email],
+        body=f"Hi {user.username},\n\n"
+             f"Click the link below to reset your password. "
+             f"This link expires at {token_row.expires_at:%H:%M UTC}.\n\n{link}\n\n"
+             f"If you didn’t request this, just ignore this e-mail."
+    )
+    mail.send(msg)
+
 @application.route('/forgot-password', methods=['GET'])
 def forgot_password_get():
     # A minimal Jinja template lives at templates/forgot_password.html
     return render_template('forgot_password.html')
+
+@application.route('/forgot-password', methods=['POST'])
+def forgot_password_post():
+    email = request.form['email'].strip()
+    user  = User.query.filter_by(email=email).first()
+
+    # Always show the same flash to avoid e-mail enumeration
+    flash("If that e-mail exists, we've sent reset instructions.", "info")
+
+    if not user:
+        return redirect(url_for('login'))
+
+    # generate token row
+    token_row = PasswordResetToken.generate(user.id, ttl_minutes=30)
+    db.session.add(token_row)
+    db.session.commit()
+
+    _send_reset_email(user, token_row)
+    return redirect(url_for('login'))
+
+@application.route('/reset/<token>', methods=['GET'])
+def reset_get(token):
+    tok = PasswordResetToken.query.filter_by(token=token).first()
+    if not tok or not tok.is_valid():
+        flash("Invalid or expired reset link.", "danger")
+        return redirect(url_for('login'))
+    return render_template('reset_password.html', token=token)
+
+@application.route('/reset/<token>', methods=['POST'])
+def reset_post(token):
+    tok = PasswordResetToken.query.filter_by(token=token, used=False).first()
+    if not tok or not tok.is_valid():
+        flash("Reset link invalid or expired.", "danger")
+        return redirect(url_for('login'))
+
+    pw  = request.form['password']
+    cfm = request.form['confirm']
+    if pw != cfm or len(pw) < 6:
+        flash("Passwords must match and be at least 6 characters.", "danger")
+        return redirect(url_for('reset_get', token=token))
+
+    user = User.query.get(tok.user_id)
+    user.set_password(pw)
+
+    tok.used = True
+    db.session.commit()
+
+    flash("Password updated! Please log in.", "success")
+    return redirect(url_for('login'))
 
 # ---------------------------------
 # Introductory / Home
