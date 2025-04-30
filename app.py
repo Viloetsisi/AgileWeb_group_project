@@ -46,9 +46,9 @@ def signup():
             return redirect(url_for('signup'))
         user = User(
             username=username,
-            email=email,
-            password=generate_password_hash(pwd)
+            email=email
         )
+        user.set_password(pwd)
         db.session.add(user)
         db.session.commit()
         flash("Account created! Please log in.", "success")
@@ -66,7 +66,7 @@ def login():
         user  = User.query.filter(
             (User.username==ident)|(User.email==ident)
         ).first()
-        if user and check_password_hash(user.password, pwd):
+        if user and user.check_password(pwd):
             session.clear()
             session['user_id'] = user.id
             flash("Logged in successfully.", "success")
