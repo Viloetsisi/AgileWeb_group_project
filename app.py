@@ -12,7 +12,8 @@ from flask import (
     session, jsonify
 )
 from model import db, User, Profile, Document
-
+from flask_mail import Mail
+from reset_models import PasswordResetToken
 # ---------------------------------
 # Application Initialization
 # ---------------------------------
@@ -23,6 +24,17 @@ application.config.update({
     'SQLALCHEMY_TRACK_MODIFICATIONS': False,
     'UPLOAD_FOLDER': os.path.join(application.root_path, 'uploads')
 })
+
+# -- Mail setup -------------------
+application.config.update(
+    MAIL_SERVER='localhost',
+    MAIL_PORT=1025,
+    MAIL_USERNAME='',
+    MAIL_PASSWORD='',
+    MAIL_SUPPRESS_SEND=True # TODO Remove for production!!
+)
+mail = Mail(application)
+
 os.makedirs(application.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # bind SQLAlchemy to our Flask app
