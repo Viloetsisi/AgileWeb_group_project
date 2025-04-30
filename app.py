@@ -93,6 +93,15 @@ def logout():
     return redirect(url_for('login'))
 
 # ---------------------------------
+# Forgot Password
+# ---------------------------------
+
+@application.route('/forgot-password', methods=['GET'])
+def forgot_password_get():
+    # A minimal Jinja template lives at templates/forgot_password.html
+    return render_template('forgot_password.html')
+
+# ---------------------------------
 # Introductory / Home
 # ---------------------------------
 @application.route('/')
