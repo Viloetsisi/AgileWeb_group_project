@@ -35,8 +35,8 @@ application.config.update(
     MAIL_USERNAME='',
     MAIL_PASSWORD='',
     MAIL_DEFAULT_SENDER=('PathFinder', 'no-reply@pathfinder.local'),
-    MAIL_SUPPRESS_SEND = False,
-    MAIL_BACKEND = 'console'
+    MAIL_SUPPRESS_SEND = False, # TODO: Remove for production
+    MAIL_BACKEND = 'console'    # TODO: Remove for production
 )
 mail = Mail(application)
 
@@ -162,7 +162,7 @@ def reset_post(token):
         return redirect(url_for('reset_get', token=token))
 
     user = User.query.get(tok.user_id)
-    user.set_password(pw)
+    user.password = generate_password_hash(pw)
 
     tok.used = True
     db.session.commit()
