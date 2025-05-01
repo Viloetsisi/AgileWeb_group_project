@@ -16,6 +16,7 @@ from flask import (
 from model import db, User, Profile, Document, PasswordResetToken
 from flask_mail import Mail, Message
 
+
 # ---------------------------------
 # Application Initialization
 # ---------------------------------
@@ -30,13 +31,13 @@ application.config.update({
 
 # -- Mail setup -------------------
 application.config.update(
-    MAIL_SERVER='localhost',
-    MAIL_PORT=1025,
-    MAIL_USERNAME='',
-    MAIL_PASSWORD='',
-    MAIL_DEFAULT_SENDER=('PathFinder', 'no-reply@pathfinder.local'),
-    MAIL_SUPPRESS_SEND = False, # TODO: Remove for production
-    MAIL_BACKEND = 'console'    # TODO: Remove for production
+    MAIL_SERVER='smtp.gmail.com',
+    MAIL_PORT=587,
+    MAIL_USERNAME='pathfinder.donotreply@gmail.com',
+    MAIL_PASSWORD='lwzm kdun lziv ywfv',
+    MAIL_DEFAULT_SENDER="PathFinder <pathfinder.donotreply@gmail.com>",
+    MAIL_USE_TLS=True,
+    MAIL_USE_SSL=False
 )
 mail = Mail(application)
 
@@ -102,18 +103,18 @@ def logout():
 # ---------------------------------
 
 def _send_reset_email(user, token_row):
-    link = urljoin(
-        request.url_root,
-        url_for('reset_get', token=token_row.token)
-    )
-    msg = Message(
-        subject="PathFinder password reset",
-        recipients=[user.email],
-        body=f"Hi {user.username},\n\n"
-             f"Click the link below to reset your password. "
-             f"This link expires at {token_row.expires_at:%H:%M UTC}.\n\n{link}\n\n"
-             f"If you didn’t request this, just ignore this e-mail."
-    )
+    link   = urljoin(request.url_root, url_for('reset_get', token=token_row.token))
+    expiry = token_row.expires_at.strftime("%H:%M UTC")
+
+    html_body = render_template('email/reset_password.html',
+                                user=user, link=link, expiry=expiry)
+    text_body = render_template('email/reset_password.txt',
+                                user=user, link=link, expiry=expiry)
+
+    msg = Message(subject="Reset your PathFinder password",
+                  recipients=[user.email],
+                  html=html_body,
+                  body=text_body)
     mail.send(msg)
 
 @application.route('/forgot-password', methods=['GET'])
