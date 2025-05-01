@@ -4,6 +4,8 @@ app.py: Main Flask application for PathFinder.
 """
 import os
 from datetime import datetime
+from urllib.parse import urljoin
+import secrets
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import (
@@ -11,18 +13,34 @@ from flask import (
     redirect, url_for, flash,
     session, jsonify
 )
-from model import db, User, Profile, Document
+from model import db, User, Profile, Document, PasswordResetToken
+from flask_mail import Mail, Message
+
 
 # ---------------------------------
 # Application Initialization
 # ---------------------------------
 application = Flask(__name__)
+DB_PATH = os.path.join(application.root_path, "pathfinder.db")
 application.config.update({
     'SECRET_KEY': os.environ.get('SECRET_KEY', 'change_this_to_a_secure_random_key'),
-    'SQLALCHEMY_DATABASE_URI': os.environ.get('DATABASE_URL', 'sqlite:///pathfinder.db'),
+    'SQLALCHEMY_DATABASE_URI': os.environ.get('DATABASE_URL', f'sqlite:///{DB_PATH}'),
     'SQLALCHEMY_TRACK_MODIFICATIONS': False,
     'UPLOAD_FOLDER': os.path.join(application.root_path, 'uploads')
 })
+
+# -- Mail setup -------------------
+application.config.update(
+    MAIL_SERVER='smtp.gmail.com',
+    MAIL_PORT=587,
+    MAIL_USERNAME='pathfinder.donotreply@gmail.com',
+    MAIL_PASSWORD='lwzm kdun lziv ywfv',
+    MAIL_DEFAULT_SENDER="PathFinder <pathfinder.donotreply@gmail.com>",
+    MAIL_USE_TLS=True,
+    MAIL_USE_SSL=False
+)
+mail = Mail(application)
+
 os.makedirs(application.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # bind SQLAlchemy to our Flask app
@@ -78,6 +96,78 @@ def login():
 @application.route('/logout')
 def logout():
     session.clear()
+    return redirect(url_for('login'))
+
+# ---------------------------------
+# Forgot Password
+# ---------------------------------
+
+def _send_reset_email(user, token_row):
+    link   = urljoin(request.url_root, url_for('reset_get', token=token_row.token))
+    expiry = token_row.expires_at.strftime("%H:%M UTC")
+
+    html_body = render_template('email/reset_password.html',
+                                user=user, link=link, expiry=expiry)
+    text_body = render_template('email/reset_password.txt',
+                                user=user, link=link, expiry=expiry)
+
+    msg = Message(subject="Reset your PathFinder password",
+                  recipients=[user.email],
+                  html=html_body,
+                  body=text_body)
+    mail.send(msg)
+
+@application.route('/reset-link-sent')
+def reset_link_sent():
+    return render_template('reset_link_sent.html')
+
+@application.route('/forgot-password', methods=['GET'])
+def forgot_password_get():
+    # A minimal Jinja template lives at templates/forgot_password.html
+    return render_template('forgot_password.html')
+
+@application.route('/forgot-password', methods=['POST'])
+def forgot_password_post():
+    email = request.form['email'].strip()
+    user  = User.query.filter_by(email=email).first()
+
+    # generate token row
+    if user:
+        token_row = PasswordResetToken.generate(user.id, ttl_minutes=30)
+        db.session.add(token_row)
+        db.session.commit()
+        _send_reset_email(user, token_row)
+    
+    return redirect(url_for('reset_link_sent'))
+
+@application.route('/reset/<token>', methods=['GET'])
+def reset_get(token):
+    tok = PasswordResetToken.query.filter_by(token=token).first()
+    if not tok or not tok.is_valid():
+        flash("Invalid or expired reset link.", "danger")
+        return redirect(url_for('login'))
+    return render_template('reset_password.html', token=token)
+
+@application.route('/reset/<token>', methods=['POST'])
+def reset_post(token):
+    tok = PasswordResetToken.query.filter_by(token=token, used=False).first()
+    if not tok or not tok.is_valid():
+        flash("Reset link invalid or expired.", "danger")
+        return redirect(url_for('login'))
+
+    pw  = request.form['password']
+    cfm = request.form['confirm']
+    if pw != cfm or len(pw) < 6:
+        flash("Passwords must match and be at least 6 characters.", "danger")
+        return redirect(url_for('reset_get', token=token))
+
+    user = User.query.get(tok.user_id)
+    user.password = generate_password_hash(pw)
+
+    tok.used = True
+    db.session.commit()
+
+    flash("Password updated! Please log in.", "success")
     return redirect(url_for('login'))
 
 # ---------------------------------
