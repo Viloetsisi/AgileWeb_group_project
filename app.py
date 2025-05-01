@@ -117,6 +117,10 @@ def _send_reset_email(user, token_row):
                   body=text_body)
     mail.send(msg)
 
+@application.route('/reset-link-sent')
+def reset_link_sent():
+    return render_template('reset_link_sent.html')
+
 @application.route('/forgot-password', methods=['GET'])
 def forgot_password_get():
     # A minimal Jinja template lives at templates/forgot_password.html
@@ -127,19 +131,14 @@ def forgot_password_post():
     email = request.form['email'].strip()
     user  = User.query.filter_by(email=email).first()
 
-    # Always show the same flash to avoid e-mail enumeration
-    flash("If that e-mail exists, we've sent reset instructions.", "info")
-
-    if not user:
-        return redirect(url_for('login'))
-
     # generate token row
-    token_row = PasswordResetToken.generate(user.id, ttl_minutes=30)
-    db.session.add(token_row)
-    db.session.commit()
-
-    _send_reset_email(user, token_row)
-    return redirect(url_for('login'))
+    if user:
+        token_row = PasswordResetToken.generate(user.id, ttl_minutes=30)
+        db.session.add(token_row)
+        db.session.commit()
+        _send_reset_email(user, token_row)
+    
+    return redirect(url_for('reset_link_sent'))
 
 @application.route('/reset/<token>', methods=['GET'])
 def reset_get(token):
