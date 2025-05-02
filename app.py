@@ -231,7 +231,41 @@ def upload():
 # ---------------------------------
 @application.route('/visualize')
 def visualize():
-    return render_template('visualize.html')
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+
+    # Example: Profile completeness
+    profile = Profile.query.filter_by(user_id=user_id).first()
+    fields = [
+       profile.full_name, profile.birth_date, profile.education,
+       profile.school, profile.graduation_date,
+       profile.career_goal, profile.self_description,
+       profile.internship_experience
+    ]
+    completeness = sum(bool(f) for f in fields) / len(fields)  # 0.0–1.0
+
+    # Example: Document strength
+    docs = Document.query.filter_by(user_id=user_id).all()
+    doc_score = min(len(docs) / 3, 1.0)  # cap to 1.0
+
+    # Example: Skill-match (if you track interests vs. target roles)
+    # Assume you have a list of required_skills and user.interests
+    required_skills = {'Data Analysis','Python','Communication'}
+    user_skills = set(profile.career_goal.split(','))  # or a real list
+    skill_score = len(required_skills & user_skills) / len(required_skills)
+
+    # Weighted overall score
+    fit_score = round((0.5 * completeness + 0.3 * skill_score + 0.2 * doc_score) * 100)
+
+    # Pass data to template
+    return render_template(
+      'visualize.html',
+      completeness=int(completeness * 100),
+      skill_score=int(skill_score * 100),
+      doc_score=int(doc_score * 100),
+      fit_score=fit_score
+    )
 
 @application.route('/share', methods=['GET', 'POST'])
 def share():
