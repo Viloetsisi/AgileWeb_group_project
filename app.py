@@ -15,10 +15,10 @@ from flask import (
 )
 from model import db, User, Profile, Document, PasswordResetToken
 from flask_mail import Mail, Message
-from flask_migrate import Migrate  # ✅ 新增
+from flask_migrate import Migrate  # ✅ Added
 
 # ---------------------------------
-# Application Initialization
+# App Initialization
 # ---------------------------------
 application = Flask(__name__)
 DB_PATH = os.path.join(application.root_path, "pathfinder.db")
@@ -29,7 +29,7 @@ application.config.update({
     'UPLOAD_FOLDER': os.path.join(application.root_path, 'uploads')
 })
 
-# Mail setup
+# Mail configuration
 application.config.update(
     MAIL_SERVER='smtp.gmail.com',
     MAIL_PORT=587,
@@ -45,10 +45,10 @@ os.makedirs(application.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Initialize extensions
 db.init_app(application)
-migrate = Migrate(application, db)  # ✅ 新增
+migrate = Migrate(application, db)  # ✅ Added
 
 # ---------------------------------
-# Signup
+# User Registration
 # ---------------------------------
 @application.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -260,7 +260,7 @@ def profile_view():
     return render_template('profile.html', user=user, profile=profile, documents=documents)
 
 # ---------------------------------
-# Entry point (no db.create_all here)
+# App Entry Point
 # ---------------------------------
 if __name__ == '__main__':
     application.run(host='0.0.0.0', port=5000, debug=True)
