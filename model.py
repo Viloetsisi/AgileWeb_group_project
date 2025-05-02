@@ -1,6 +1,7 @@
 # model.py
 
-from datetime import datetime
+from datetime import datetime, timedelta
+import secrets
 from flask_sqlalchemy import SQLAlchemy
 
 # Initialize the shared SQLAlchemy object
@@ -72,3 +73,27 @@ class Document(db.Model):
 
     def __repr__(self):
         return f"<Document {self.file_name!r} of user {self.user_id}>"
+
+# ------------------------------
+# Password Reset Token Data
+# ------------------------------
+class PasswordResetToken(db.Model):
+    __tablename__ = "password_reset_tokens"
+
+    id         = db.Column(db.Integer, primary_key=True)
+    user_id    = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    token      = db.Column(db.String(128), unique=True, nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    used       = db.Column(db.Boolean,   default=False)
+
+    # convenience constructor
+    @classmethod
+    def generate(cls, user_id, ttl_minutes=30):
+        return cls(
+            user_id=user_id,
+            token=secrets.token_urlsafe(32),
+            expires_at=datetime.utcnow() + timedelta(minutes=ttl_minutes)
+        )
+
+    def is_valid(self):
+        return (not self.used) and self.expires_at > datetime.utcnow()
