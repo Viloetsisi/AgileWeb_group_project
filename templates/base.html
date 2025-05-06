@@ -24,6 +24,9 @@
       <div class="collapse navbar-collapse" id="navMenu">
         <ul class="navbar-nav ms-auto">
           {% if session.get('user_id') %}
+           <li class="nav-item">
+              <a class="nav-link{% if request.endpoint == 'career_market' %} active{% endif %}" href="{{ url_for('career_market') }}">Career Market</a>
+            </li>
             <li class="nav-item">
               <a class="nav-link{% if request.endpoint == 'dashboard' %} active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a>
             </li>
