@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Shared With Me – PathFinder{% endblock %}
+
+{% block content %}
+<div class="container-sm py-4">
+  <h2 class="h3 mb-4">Shared With Me</h2>
+
+  <!-- Documents -->
+  <div class="mb-5">
+    <h4>Documents</h4>
+    {% if shared_docs %}
+    <ul class="list-group">
+      {% for doc, owner in shared_docs %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <strong>{{ doc.file_name }}</strong>
+          <small class="text-muted">shared by {{ owner }}</small>
+        </div>
+        <a href="{{ url_for('static', filename=doc.file_path.split('/',1)[1]) }}"
+           class="btn btn-sm btn-outline-primary" target="_blank">
+          Download
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-muted">No documents have been shared with you.</p>
+    {% endif %}
+  </div>
+
+  <!-- Dashboards -->
+  <div>
+    <h4>Career Dashboards</h4>
+    {% if viz_owners %}
+    <ul class="list-group">
+      {% for user in viz_owners %}
+      <li class="list-group-item">
+        <a href="{{ url_for('visualize') }}?user={{ user.id }}">
+          {{ user.username }}’s Dashboard
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-muted">No dashboards shared with you.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
