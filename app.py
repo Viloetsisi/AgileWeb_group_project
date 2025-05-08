@@ -16,6 +16,7 @@ from flask import (
 from model import db, User, Profile, Document, PasswordResetToken, SharedWith,VizShare  # ✅ Added
 from flask_mail import Mail, Message
 from flask_migrate import Migrate  # ✅ Added
+import requests
 
 # ---------------------------------
 # App Initialization
@@ -276,15 +277,59 @@ def visualize():
 
     # 8. Aggregate into a single fit_score percentage
     fit_score = round((0.5 * completeness + 0.3 * skill_score + 0.2 * doc_score) * 100)
+  
+  # 9. Career Market API Integration
+    job_title = profile.career_goal.strip() if profile.career_goal else ""
+    location = profile.school.strip() if profile.school else ""
+    
+    if job_title and location:
+        query = f"{job_title} jobs in {location}"
+    elif job_title:
+        query = f"{job_title} jobs"
+    elif location:
+        query = f"jobs in {location}"
+    else:
+        query = "developer jobs"
 
-    # 9. Render the visualization template
+    querystring = {
+        "query": query,
+        "page": "1",
+        "num_pages": "1",
+        "date_posted": "all",
+        "country": "us",
+        "language": "en"
+    }
+
+    url = "https://jsearch.p.rapidapi.com/search"
+    headers = {
+        "x-rapidapi-key": "96ffa33c88msh8ee305b187870b3p169acejsn6d12679ffd71",
+        "x-rapidapi-host": "jsearch.p.rapidapi.com"
+    }
+
+    jobs = []
+    try:
+        resp = requests.get(url, headers=headers, params=querystring)
+        if resp.status_code == 200:
+            jobs = resp.json().get("data", [])
+        else:
+            print(f"[Job API] Error {resp.status_code}: {resp.text}")
+    except Exception as e:
+        print(f"[Job API] Exception: {e}")
+
+    # 10. Render visualize template with job listings
     return render_template(
         'visualize.html',
         completeness=int(completeness * 100),
         skill_score=int(skill_score * 100),
         doc_score=int(doc_score * 100),
-        fit_score=fit_score
+        fit_score=fit_score,
+        jobs=jobs,
+        job_title=job_title,
+        location=location,
+        profile=profile
     )
+    
+    
 @application.route('/share', methods=['GET', 'POST'])
 def share():
     user_id = session.get('user_id')

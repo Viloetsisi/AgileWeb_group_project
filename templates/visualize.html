@@ -71,4 +71,34 @@
       });
     </script>
   {% endblock %}
+  <hr class="my-5">
+
+  <h3 class="h5 mb-3">Career market: {{ job_title }} in {{ location }}</h3>
+
+  <form method="get" action="{{ url_for('visualize') }}" class="mb-4">
+    <input type="hidden" name="job_title" value="{{ profile.career_goal }}">
+    <input type="hidden" name="location" value="{{ profile.school }}">
+    <div class="text-center">
+    </div>   
+  </form>
+  
+  <!-- Job Listings -->
+  {% if jobs %}
+    <div class="list-group mt-3">
+      {% for job in jobs %}
+        <div class="list-group-item">
+          <h5>{{ job.job_title }}</h5>
+          <p><strong>Company:</strong> {{ job.employer_name }}</p>
+          <p><strong>Location:</strong> {{ job.job_city }}, {{ job.job_state }}</p>
+          <p><strong>Posted:</strong> {{ job.job_posted_at_datetime_utc }}</p>
+          <p>{{ job.job_description[:200] if job.job_description else "No description available." }}...</p>
+          <a href="{{ job.job_apply_link }}" class="btn btn-primary btn-sm" target="_blank">Apply</a>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>No jobs found for the given search criteria.</p>
+  {% endif %}
+</div>
+
 {% endblock %}
