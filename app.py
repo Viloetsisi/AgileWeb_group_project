@@ -13,9 +13,11 @@ from flask import (
     redirect, url_for, flash,
     session, jsonify
 )
-from model import db, User, Profile, Document, PasswordResetToken, SharedWith,VizShare  # ✅ Added
+from model import db, User, Profile, Document, PasswordResetToken, SharedWith, VizShare, JobHistory
 from flask_mail import Mail, Message
 from flask_migrate import Migrate  # ✅ Added
+from datetime import datetime
+
 
 # ---------------------------------
 # App Initialization
@@ -398,9 +400,14 @@ def shared():
         viz_owners=viz_owners
     )
 
-@application.route('/jobs')
+@application.route('/jobs', methods=['GET'])
 def jobs():
-    return render_template('jobs.html')
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+    history = JobHistory.query.filter_by(user_id=user_id).all()
+    return render_template('jobs.html', history=history)
+
 
 @application.route('/profile')
 def profile_view():
@@ -412,8 +419,57 @@ def profile_view():
     documents = Document.query.filter_by(user_id=user_id).all()
     return render_template('profile.html', user=user, profile=profile, documents=documents)
 
+@application.route('/api/job_history/<int:user_id>')
+def get_job_history(user_id):
+    from model import JobHistory  # make sure it's imported if not already
+    history = JobHistory.query.filter_by(user_id=user_id).all()
+    return jsonify([
+        {
+            'company_name': h.company_name,
+            'position': h.position,
+            'start_date': h.start_date.strftime('%Y-%m-%d') if h.start_date else '',
+            'end_date': h.end_date.strftime('%Y-%m-%d') if h.end_date else '',
+            'description': h.description or ''
+        }
+        for h in history
+    ])
+    
+# ---------------------------------
+# Job History Upload
+# ---------------------------------    
+@application.route('/upload_job_history', methods=['POST'])
+def upload_job_history():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+
+    company_name = request.form.get('company_name')
+    position = request.form.get('position')
+    description = request.form.get('description')
+
+    # Parse dates safely
+    start_date_raw = request.form.get('start_date')
+    end_date_raw = request.form.get('end_date')
+    start_date = datetime.strptime(start_date_raw, '%Y-%m-%d').date() if start_date_raw else None
+    end_date = datetime.strptime(end_date_raw, '%Y-%m-%d').date() if end_date_raw else None
+
+    job = JobHistory(
+        user_id=user_id,
+        company_name=company_name,
+        position=position,
+        start_date=start_date,
+        end_date=end_date,
+        description=description
+    )
+
+    db.session.add(job)
+    db.session.commit()
+
+    flash("Job history uploaded successfully!", "success")
+    return redirect(url_for('jobs'))
 # ---------------------------------
 # App Entry Point
 # ---------------------------------
 if __name__ == '__main__':
     application.run(host='0.0.0.0', port=5000, debug=True)
+    
