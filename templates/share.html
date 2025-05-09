@@ -1,43 +1,63 @@
 {% extends "base.html" %}
-
 {% block title %}Manage Sharing – PathFinder{% endblock %}
 
 {% block content %}
-<div class="container">
-  <h2 class="h3 mb-4">Manage Your Shared Data</h2>
+<div class="container-sm manage-sharing">
+  <h2 class="h3 mb-4">Manage Sharing</h2>
+  <form method="post">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Share With</th>
+        </tr>
+      </thead>
+      <tbody>
+        {# — your documents — #}
+        {% for doc in entries %}
+        <tr>
+          <td>{{ doc.file_name }}</td>
+          <td>
+            <select
+              name="share_with_{{ doc.id }}[]"
+              multiple
+              class="form-select form-select-sm">
+              {% for u in all_users %}
+              <option
+                value="{{ u.id }}"
+                {% if shared_map.get(doc.id) and u.id in shared_map[doc.id] %}
+                  selected
+                {% endif %}>
+                {{ u.username }}
+              </option>
+              {% endfor %}
+            </select>
+          </td>
+        </tr>
+        {% endfor %}
 
-  {% if entries %}
-  <div class="accordion" id="shareAccordion">
-    {% for entry in entries %}
-    <div class="accordion-item">
-      <h2 class="accordion-header" id="heading{{ entry.id }}">
-        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ entry.id }}" aria-expanded="false" aria-controls="collapse{{ entry.id }}">
-          {{ entry.filename }} <span class="text-muted ms-2">(uploaded {{ entry.upload_date.strftime('%Y-%m-%d') }})</span>
-        </button>
-      </h2>
-      <div id="collapse{{ entry.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ entry.id }}" data-bs-parent="#shareAccordion">
-        <div class="accordion-body">
-          <form method="post" action="{{ url_for('share') }}">
-            <input type="hidden" name="entry_id" value="{{ entry.id }}">
-            <div class="mb-3">
-              <label for="users-{{ entry.id }}" class="form-label">Share with:</label>
-              <select id="users-{{ entry.id }}" name="user_ids" class="form-select" multiple>
-                {% for user in all_users %}
-                <option value="{{ user.id }}" {% if user.id in entry.shared_with_ids %}selected{% endif %}>{{ user.username }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <button type="submit" class="btn btn-primary">Save</button>
-          </form>
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-  {% else %}
-  <div class="alert alert-info" role="alert">
-    You haven't uploaded any data yet. <a href="{{ url_for('upload') }}" class="alert-link">Upload data</a> to start sharing.
-  </div>
-  {% endif %}
+        {# — the Career Dashboard row — #}
+        <tr>
+          <td><strong>Career Dashboard</strong></td>
+          <td>
+            <select
+              name="share_viz[]"
+              multiple
+              class="form-select form-select-sm">
+              {% for u in all_users %}
+              <option
+                value="{{ u.id }}"
+                {% if u.id in viz_shared %}selected{% endif %}>
+                {{ u.username }}
+              </option>
+              {% endfor %}
+            </select>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <button type="submit" class="btn btn-warning">Save Sharing Settings</button>
+  </form>
 </div>
 {% endblock %}
