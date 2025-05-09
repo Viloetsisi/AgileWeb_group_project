@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Upload Document – PathFinder{% endblock %}
+
+{% block content %}
+<div class="container-sm bg-white p-4 rounded shadow-sm">
+  <h2 class="h3 text-center mb-4">Upload a Document</h2>
+  <form action="{{ url_for('upload_document') }}" method="post" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label for="data_file" class="form-label">Upload Document</label>
+      <input type="file" class="form-control" id="data_file" name="data_file" required>
+    </div>
+    <button type="submit" class="btn btn-success w-100">Upload Document</button>
+  </form>
+  <p class="text-center text-muted mt-3">
+    <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+  </p>
+</div>
+{% endblock %}
