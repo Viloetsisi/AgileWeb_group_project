@@ -90,7 +90,7 @@ def login():
             session['user_id'] = user.id
             flash("Logged in successfully.", "success")
             return redirect(url_for('dashboard'))
-        flash("Invalid credentials.", "danger")
+        flash("Invalid user or password.", "danger")
         return redirect(url_for('login'))
     return render_template('login.html')
 
