@@ -452,6 +452,7 @@ def upload_job_history():
     end_date_raw = request.form.get('end_date')
     start_date = datetime.strptime(start_date_raw, '%Y-%m-%d').date() if start_date_raw else None
     end_date = datetime.strptime(end_date_raw, '%Y-%m-%d').date() if end_date_raw else None
+    salary = request.form.get('salary')
 
     job = JobHistory(
         user_id=user_id,
@@ -459,7 +460,9 @@ def upload_job_history():
         position=position,
         start_date=start_date,
         end_date=end_date,
-        description=description
+        description=description,
+        salary=salary
+        
     )
 
     db.session.add(job)

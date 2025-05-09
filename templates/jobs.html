@@ -25,6 +25,7 @@
         <input type="date" name="start_date" placeholder="Start Date" class="p-2 border rounded" required>
         <input type="date" name="end_date" placeholder="End Date" class="p-2 border rounded">
       </div>
+      <input type="text" name="salary" placeholder="Salary" class="p-2 border rounded">
       <textarea name="description" rows="3" placeholder="Description (optional)" class="p-2 border rounded"></textarea>
       <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Submit</button>
     </div>
@@ -39,7 +40,9 @@
         <th class="py-2 px-4 border">Position</th>
         <th class="py-2 px-4 border">Start Date</th>
         <th class="py-2 px-4 border">End Date</th>
+        <th class="py-2 px-4 border">Salary</th>
         <th class="py-2 px-4 border">Description</th>
+        
       </tr>
     </thead>
     <tbody>
@@ -49,6 +52,7 @@
         <td class="py-2 px-4 border">{{ h.position }}</td>
         <td class="py-2 px-4 border">{{ h.start_date }}</td>
         <td class="py-2 px-4 border">{{ h.end_date or '—' }}</td>
+        <td class="py-2 px-4 border">{{ h.salary or '—' }}</td>
         <td class="py-2 px-4 border">{{ h.description or '—' }}</td>
       </tr>
       {% endfor %}

@@ -129,4 +129,6 @@ class JobHistory(db.Model):
     start_date = db.Column(db.Date)
     end_date = db.Column(db.Date)
     description = db.Column(db.Text)
+    salary = db.Column(db.String(100))  # or Float/Integer if needed
+
 
