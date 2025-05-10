@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Career Market: Find Your Next Job</h2>
+
+  <!-- Job Search Form -->
+  <form method="get" action="{{ url_for('career_market') }}" class="mb-4">
+    <div class="row">
+      <div class="col-md-6">
+        <input type="text" class="form-control" name="job_title" placeholder="Job title (e.g. Developer, Data Scientist)" value="{{ job_title }}">
+      </div>
+      <div class="col-md-6">
+        <input type="text" class="form-control" name="location" placeholder="Location (e.g. Chicago, Remote)" value="{{ location }}">
+      </div>
+    </div>
+    <button class="btn btn-primary mt-2" type="submit">Search</button>
+  </form>
+
+  <!-- Job Listings -->
+  {% if jobs %}
+    <div class="list-group mt-3">
+      {% for job in jobs %}
+        <div class="list-group-item">
+          <h5>{{ job.job_title }}</h5>
+          <p><strong>Company:</strong> {{ job.employer_name }}</p>
+          <p><strong>Location:</strong> {{ job.job_city }}, {{ job.job_state }}</p>
+          <p><strong>Posted:</strong> {{ job.job_posted_at_datetime_utc }}</p>
+          <p>{{ job.job_description[:200] }}...</p>
+          <a href="{{ job.job_apply_link }}" class="btn btn-primary btn-sm" target="_blank">Apply</a>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>No jobs found for the given search criteria.</p>
+  {% endif %}
+</div>
+{% endblock %}
