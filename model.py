@@ -73,6 +73,25 @@ class Document(db.Model):
 
     def __repr__(self):
         return f"<Document {self.file_name!r} of user {self.user_id}>"
+    
+class SharedWith(db.Model):
+    __tablename__ = 'shared_with'
+    document_id       = db.Column(
+        db.Integer,
+        db.ForeignKey('documents.id'),
+        primary_key=True
+    )
+    shared_to_user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id'),
+        primary_key=True
+    )
+
+class VizShare(db.Model):
+    __tablename__ = 'viz_share'
+    owner_id          = db.Column(db.Integer, db.ForeignKey('users.id'),     primary_key=True)
+    shared_to_user_id = db.Column(db.Integer, db.ForeignKey('users.id'),     primary_key=True)
+
 
 # ------------------------------
 # Password Reset Token Data

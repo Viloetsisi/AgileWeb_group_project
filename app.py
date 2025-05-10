@@ -13,7 +13,7 @@ from flask import (
     redirect, url_for, flash,
     session, jsonify
 )
-from model import db, User, Profile, Document, PasswordResetToken
+from model import db, User, Profile, Document, PasswordResetToken, SharedWith,VizShare  # ✅ Added
 from flask_mail import Mail, Message
 from flask_migrate import Migrate  # ✅ Added
 import requests
@@ -91,7 +91,7 @@ def login():
             session['user_id'] = user.id
             flash("Logged in successfully.", "success")
             return redirect(url_for('dashboard'))
-        flash("Invalid credentials.", "danger")
+        flash("Invalid user or password.", "danger")
         return redirect(url_for('login'))
     return render_template('login.html')
 
@@ -232,53 +232,172 @@ def upload():
 # ---------------------------------
 @application.route('/visualize')
 def visualize():
-    user_id = session.get('user_id')
-    if not user_id:
+    # 1. Ensure user is logged in
+    current_user_id = session.get('user_id')
+    if not current_user_id:
         return redirect(url_for('login'))
 
-    # Example: Profile completeness
-    profile = Profile.query.filter_by(user_id=user_id).first()
+    # 2. Determine whose dashboard to show (default = self)
+    owner_id = request.args.get('user', type=int, default=current_user_id)
+
+    # 3. If viewing someone else's, enforce VizShare permission
+    if owner_id != current_user_id:
+        allowed = VizShare.query.filter_by(
+            owner_id=owner_id,
+            shared_to_user_id=current_user_id
+        ).first()
+        if not allowed:
+            flash("You’re not authorized to view that dashboard.", "danger")
+            return redirect(url_for('dashboard'))
+
+    # 4. Load the owner's profile and documents
+    profile = Profile.query.filter_by(user_id=owner_id).first()
+    docs    = Document.query.filter_by(user_id=owner_id).all()
+
+    # 5. Compute Profile completeness (0.0–1.0)
     fields = [
-       profile.full_name, profile.birth_date, profile.education,
-       profile.school, profile.graduation_date,
-       profile.career_goal, profile.self_description,
-       profile.internship_experience
+        profile.full_name,
+        profile.birth_date,
+        profile.education,
+        profile.school,
+        profile.graduation_date,
+        profile.career_goal,
+        profile.self_description,
+        profile.internship_experience
     ]
-    completeness = sum(bool(f) for f in fields) / len(fields)  # 0.0–1.0
+    completeness = sum(bool(f) for f in fields) / len(fields)
 
-    # Example: Document strength
-    docs = Document.query.filter_by(user_id=user_id).all()
-    doc_score = min(len(docs) / 3, 1.0)  # cap to 1.0
+    # 6. Compute Document strength score (cap at 1.0)
+    doc_score = min(len(docs) / 3, 1.0)
 
-    # Example: Skill-match (if you track interests vs. target roles)
-    # Assume you have a list of required_skills and user.interests
-    required_skills = {'Data Analysis','Python','Communication'}
-    user_skills = set(profile.career_goal.split(','))  # or a real list
+    # 7. Compute Skill-match (example logic)
+    required_skills = {'Data Analysis', 'Python', 'Communication'}
+    user_skills = set(profile.career_goal.split(',')) if profile.career_goal else set()
     skill_score = len(required_skills & user_skills) / len(required_skills)
 
-    # Weighted overall score
+    # 8. Aggregate into a single fit_score percentage
     fit_score = round((0.5 * completeness + 0.3 * skill_score + 0.2 * doc_score) * 100)
 
-    # Pass data to template
+    # 9. Render the visualization template
     return render_template(
-      'visualize.html',
-      completeness=int(completeness * 100),
-      skill_score=int(skill_score * 100),
-      doc_score=int(doc_score * 100),
-      fit_score=fit_score
+        'visualize.html',
+        completeness=int(completeness * 100),
+        skill_score=int(skill_score * 100),
+        doc_score=int(doc_score * 100),
+        fit_score=fit_score
     )
-
 @application.route('/share', methods=['GET', 'POST'])
 def share():
     user_id = session.get('user_id')
     if not user_id:
         return redirect(url_for('login'))
-    entries = Document.query.filter_by(user_id=user_id).all()
+
+    # 1. Fetch the current user's documents and all other users
+    entries   = Document.query.filter_by(user_id=user_id).all()
     all_users = User.query.filter(User.id != user_id).all()
+
+    # 2. Build a map: document_id -> set(shared_to_user_ids)
+    shared_map = {}
+    for row in SharedWith.query.filter(
+            SharedWith.document_id.in_([d.id for d in entries])
+        ).all():
+        shared_map.setdefault(row.document_id, set()).add(row.shared_to_user_id)
+
+    # 3. Build a set of user_ids who can see this user's dashboard
+    viz_shared = {
+        row.shared_to_user_id
+        for row in VizShare.query.filter_by(owner_id=user_id).all()
+    }
+
     if request.method == 'POST':
+        # 4a. Handle document sharing updates
+        for doc in entries:
+            # Update the public flag
+            doc.is_shared = f'is_shared_{doc.id}' in request.form
+
+            # Get selected user IDs for this document
+            chosen = {
+                int(uid)
+                for uid in request.form.getlist(f'share_with_{doc.id}[]')
+            }
+            existing = shared_map.get(doc.id, set())
+
+            # Remove de-selected shares
+            for uid in existing - chosen:
+                SharedWith.query.filter_by(
+                    document_id=doc.id,
+                    shared_to_user_id=uid
+                ).delete()
+
+            # Add newly selected shares
+            for uid in chosen - existing:
+                db.session.add(SharedWith(
+                    document_id=doc.id,
+                    shared_to_user_id=uid
+                ))
+
+        # 4b. Handle dashboard (visualize) sharing updates
+        chosen_viz = {
+            int(uid)
+            for uid in request.form.getlist('share_viz[]')
+        }
+
+        # Remove de-selected dashboard shares
+        for uid in viz_shared - chosen_viz:
+            VizShare.query.filter_by(
+                owner_id=user_id,
+                shared_to_user_id=uid
+            ).delete()
+
+        # Add newly selected dashboard shares
+        for uid in chosen_viz - viz_shared:
+            db.session.add(VizShare(
+                owner_id=user_id,
+                shared_to_user_id=uid
+            ))
+
+        # 5. Commit all changes
+        db.session.commit()
         flash("Sharing settings updated.", "success")
         return redirect(url_for('share'))
-    return render_template('share.html', entries=entries, all_users=all_users)
+
+    # 6. Render the Manage Sharing template
+    return render_template(
+        'share.html',
+        entries=entries,
+        all_users=all_users,
+        shared_map=shared_map,
+        viz_shared=viz_shared
+    )
+
+@application.route('/shared')
+def shared():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+
+    # 1. Documents shared to me
+    shared_docs = (
+        db.session.query(Document, User.username.label('owner'))
+        .join(User, Document.user_id == User.id)
+        .join(SharedWith, SharedWith.document_id == Document.id)
+        .filter(SharedWith.shared_to_user_id == user_id)
+        .all()
+    )
+
+    # 2. Dashboards shared to me
+    viz_owners = (
+        db.session.query(User)
+        .join(VizShare, VizShare.owner_id == User.id)
+        .filter(VizShare.shared_to_user_id == user_id)
+        .all()
+    )
+
+    return render_template(
+        'shared.html',
+        shared_docs=shared_docs,
+        viz_owners=viz_owners
+    )
 
 @application.route('/jobs')
 def jobs():
