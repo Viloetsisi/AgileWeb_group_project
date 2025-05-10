@@ -436,12 +436,6 @@ def profile_view():
     return render_template('profile.html', user=user, profile=profile, documents=documents)
 
 # ---------------------------------
-# App Entry Point
-# ---------------------------------
-if __name__ == '__main__':
-    application.run(host='0.0.0.0', port=5000, debug=True)
-
-# ---------------------------------
 # Career Market
 # ---------------------------------
 
@@ -485,3 +479,10 @@ def career_market():
         print(f"Error fetching job data: {e}")
 
     return render_template("career_market.html", jobs=jobs, job_title=job_title, location=location)
+
+# ---------------------------------
+# App Entry Point
+# ---------------------------------
+if __name__ == '__main__':
+    application.run(host='0.0.0.0', port=5000, debug=True)
+
