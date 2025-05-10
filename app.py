@@ -274,7 +274,11 @@ def visualize():
 
     # 4. Load the owner's profile and documents
     profile = Profile.query.filter_by(user_id=owner_id).first()
-    docs    = Document.query.filter_by(user_id=owner_id).all()
+    if not profile:
+        flash("No profile found. Please complete your profile before visualizing.", "warning")
+        return redirect(url_for('edit_profile'))
+
+    docs = Document.query.filter_by(user_id=owner_id).all()
 
     # 5. Compute Profile completeness (0.0–1.0)
     fields = [
@@ -308,6 +312,7 @@ def visualize():
         doc_score=int(doc_score * 100),
         fit_score=fit_score
     )
+
 @application.route('/share', methods=['GET', 'POST'])
 def share():
     user_id = session.get('user_id')
