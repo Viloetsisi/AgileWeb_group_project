@@ -186,13 +186,16 @@ def dashboard():
 # ---------------------------------
 # Upload (Profile + Document)
 # ---------------------------------
-@application.route('/upload', methods=['GET', 'POST'])
-def upload():
+# Edit profile only
+@application.route('/edit_profile', methods=['GET', 'POST'])
+def edit_profile():
     user_id = session.get('user_id')
     if not user_id:
         return redirect(url_for('login'))
+
+    prof = Profile.query.filter_by(user_id=user_id).first() or Profile(user_id=user_id)
+
     if request.method == 'POST':
-        prof = Profile.query.filter_by(user_id=user_id).first() or Profile(user_id=user_id)
         prof.full_name = request.form.get('full_name')
         prof.age = request.form.get('age', type=int)
         bd = request.form.get('birth_date')
@@ -208,13 +211,28 @@ def upload():
         prof.self_description = request.form.get('self_description')
         prof.internship_experience = request.form.get('internship_experience')
         prof.is_shared = 'is_shared' in request.form
-        db.session.add(prof)
 
+        db.session.add(prof)
+        db.session.commit()
+        flash('Profile updated successfully.', 'success')
+        return redirect(url_for('profile_view'))
+
+    return render_template('edit_profile.html', profile=prof)
+
+# Upload document only
+@application.route('/upload_document', methods=['GET', 'POST'])
+def upload_document():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
         file = request.files.get('data_file')
         if file and file.filename:
             filename = secure_filename(file.filename)
             save_path = os.path.join(application.config['UPLOAD_FOLDER'], filename)
             file.save(save_path)
+
             doc = Document(
                 user_id=user_id,
                 file_name=filename,
@@ -223,11 +241,15 @@ def upload():
                 is_shared=False
             )
             db.session.add(doc)
+            db.session.commit()
+            flash('Document uploaded successfully.', 'success')
+        else:
+            flash('No file selected.', 'danger')
 
-        db.session.commit()
-        flash('Profile and document saved successfully!', 'success')
-        return redirect(url_for('dashboard'))
-    return render_template('upload.html')
+        return redirect(url_for('profile_view'))
+
+    return render_template('upload_document.html')
+
 
 # ---------------------------------
 # Visualize, Share, Jobs
@@ -254,7 +276,11 @@ def visualize():
 
     # 4. Load the owner's profile and documents
     profile = Profile.query.filter_by(user_id=owner_id).first()
-    docs    = Document.query.filter_by(user_id=owner_id).all()
+    if not profile:
+        flash("No profile found. Please complete your profile before visualizing.", "warning")
+        return redirect(url_for('edit_profile'))
+
+    docs = Document.query.filter_by(user_id=owner_id).all()
 
     # 5. Compute Profile completeness (0.0–1.0)
     fields = [
@@ -288,6 +314,7 @@ def visualize():
         doc_score=int(doc_score * 100),
         fit_score=fit_score
     )
+
 @application.route('/share', methods=['GET', 'POST'])
 def share():
     user_id = session.get('user_id')

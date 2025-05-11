@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Upload & Profile – PathFinder{% endblock %}
+{% block title %}Edit Profile – PathFinder{% endblock %}
 
 {% block content %}
 <div class="container-sm bg-white p-4 rounded shadow-sm">
-  <h2 class="h3 text-center mb-4">Upload Your Profile & Documents</h2>
-  <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+  <h2 class="h3 text-center mb-4">Upload Your Profile</h2>
+  <form action="{{ url_for('edit_profile') }}" method="post">
     <!-- Full Name -->
     <div class="mb-3">
       <label for="full_name" class="form-label">Full Name</label>
@@ -55,12 +55,9 @@
       <input class="form-check-input" type="checkbox" id="is_shared" name="is_shared">
       <label class="form-check-label" for="is_shared">Make my profile shareable</label>
     </div>
-    <!-- Document Upload -->
-    <div class="mb-3">
-      <label for="data_file" class="form-label">Upload Document</label>
-      <input type="file" class="form-control" id="data_file" name="data_file">
-    </div>
-    <button type="submit" class="btn btn-success w-100">Save Profile & Upload</button>
+
+
+    <button type="submit" class="btn btn-primary w-100">Save Profile</button>
   </form>
   <p class="text-center text-muted mt-3">
     <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
