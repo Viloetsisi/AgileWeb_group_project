@@ -250,6 +250,29 @@ def upload_document():
 
     return render_template('upload_document.html')
 
+# Delete document
+@application.route('/delete_document/<int:doc_id>', methods=['POST'])
+def delete_document(doc_id):
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+
+    doc = Document.query.get_or_404(doc_id)
+    if doc.user_id != user_id:
+        flash("You are not authorized to delete this document.", "danger")
+        return redirect(url_for('profile_view'))
+
+    try:
+        os.remove(doc.file_path)
+    except Exception as e:
+        print(f"Error deleting file: {e}")
+
+    db.session.delete(doc)
+    db.session.commit()
+    flash("Document deleted successfully.", "success")
+    return redirect(url_for('profile_view'))
+
+
 
 # ---------------------------------
 # Visualize, Share, Jobs
