@@ -4,71 +4,107 @@
 {% block content %}
   <h2 class="h3 mb-4 text-center">Your Career Fit Dashboard</h2>
 
-  <!-- Overall Fit Gauge -->
-  <div class="d-flex justify-content-center mb-5">
-    <canvas id="fitGauge" width="200" height="200"></canvas>
+  <!-- Overall Working Experience Gauge -->
+  <div class="d-flex justify-content-center mb-4" style="max-width:200px; margin:auto;">
+    <canvas id="expGauge" width="200" height="200"></canvas>
   </div>
 
   <!-- Sub-scores bars -->
-  <div class="row mb-5">
+  <div class="row mb-4">
     <div class="col-md-4">
       <h5>Profile Completeness</h5>
       <div class="progress">
-        <div class="progress-bar bg-info" role="progressbar"
-             style="width: {{ completeness }}%">
+        <div class="progress-bar bg-info" role="progressbar" style="width: {{ completeness }}%">
           {{ completeness }}%
         </div>
       </div>
     </div>
     <div class="col-md-4">
-      <h5>Skill Match</h5>
+      <h5>Working Experience</h5>
       <div class="progress">
-        <div class="progress-bar bg-success" role="progressbar"
-             style="width: {{ skill_score }}%">
-          {{ skill_score }}%
+        <div class="progress-bar bg-success" role="progressbar" style="width: {{ star_values[4] * 20 }}%">
+          {{ star_values[4] * 20 }}%
         </div>
       </div>
     </div>
     <div class="col-md-4">
       <h5>Documents</h5>
       <div class="progress">
-        <div class="progress-bar bg-warning" role="progressbar"
-             style="width: {{ doc_score }}%">
+        <div class="progress-bar bg-warning" role="progressbar" style="width: {{ doc_score }}%">
           {{ doc_score }}%
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Chart.js scripts -->
-  {% block scripts %}
-    {{ super() }}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-      const ctx = document.getElementById('fitGauge').getContext('2d');
-      new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          datasets: [{
-            data: [{{ fit_score }}, {{ 100 - fit_score }}],
-            backgroundColor: ['#0d6efd','#e9ecef'],
-            borderWidth: 0
-          }]
-        },
-        options: {
-          circumference: 180,
-          rotation: -90,
-          cutout: '70%',
-          plugins: {
-            tooltip: { enabled: false },
-            legend: { display: false },
-            centerText: {
-              display: true,
-              text: '{{ fit_score }}%'
-            }
+  <!-- Radar (Star) Chart -->
+  <div class="d-flex justify-content-center mb-4" style="max-width:400px; margin:auto;">
+    <canvas id="starChart" width="400" height="400"></canvas>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Working Experience Gauge -->
+  <script>
+    const expCtx = document.getElementById('expGauge').getContext('2d');
+    const expValue = {{ star_values[4] * 20 }};
+    new Chart(expCtx, {
+      type: 'doughnut',
+      data: {
+        datasets: [{
+          data: [expValue, 100 - expValue],
+          backgroundColor: ['#198754', '#e9ecef'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: false,
+        rotation: -90,
+        cutout: '70%',
+        plugins: {
+          tooltip: { enabled: false },
+          legend: { display: false },
+          centerText: {
+            display: true,
+            text: expValue + '%'
           }
         }
-      });
-    </script>
-  {% endblock %}
+      }
+    });
+  </script>
+
+  <!-- Skills & Qualifications Radar Chart -->
+  <script>
+    const starCtx = document.getElementById('starChart').getContext('2d');
+    new Chart(starCtx, {
+      type: 'radar',
+      data: {
+        labels: {{ star_labels | tojson }},
+        datasets: [{
+          label: 'Your Profile',
+          data: {{ star_values | tojson }},
+          fill: true,
+          backgroundColor: 'rgba(13,110,253,0.2)',
+          borderColor: '#0d6efd',
+          pointBackgroundColor: '#0d6efd',
+          pointBorderColor: '#fff',
+          pointHoverBackgroundColor: '#fff',
+          pointHoverBorderColor: '#0d6efd'
+        }]
+      },
+      options: {
+        responsive: false,
+        scales: {
+          r: { beginAtZero: true, max: 5 }
+        },
+        plugins: {
+          legend: { position: 'top' },
+          title: { display: true, text: 'Skills & Qualifications Radar' }
+        }
+      }
+    });
+  </script>
 {% endblock %}
