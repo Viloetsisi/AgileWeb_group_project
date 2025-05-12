@@ -1,5 +1,3 @@
-# model.py
-
 from datetime import datetime, timedelta
 import secrets
 from flask_sqlalchemy import SQLAlchemy
@@ -38,13 +36,23 @@ class Profile(db.Model):
     full_name             = db.Column(db.String(120))    # Full name
     age                   = db.Column(db.Integer)        # Age
     birth_date            = db.Column(db.Date)           # Date of birth
-    education             = db.Column(db.String(100))    # Highest education level
+    education             = db.Column(db.String(100))    # Education level (Dropdown: Diploma, Bachelor, Master, PhD)
     graduation_date       = db.Column(db.Date)           # Graduation date
     school                = db.Column(db.String(200))    # University or school
     expected_company      = db.Column(db.String(200))    # Desired company
     career_goal           = db.Column(db.String(200))    # Target career path
-    self_description      = db.Column(db.Text)          # Personal bio or summary
-    internship_experience = db.Column(db.Text)          # Internship details
+    self_description      = db.Column(db.Text)           # Personal bio or summary
+    internship_experience = db.Column(db.Text)           # Internship details
+    gpa                   = db.Column(db.String(10))     # GPA (Dropdown: P, PR, D, HD)
+
+    # New Fields
+    coding_c              = db.Column(db.Boolean, default=False)  # Can code in C
+    coding_cpp            = db.Column(db.Boolean, default=False)  # Can code in C++
+    coding_java           = db.Column(db.Boolean, default=False)  # Can code in Java
+    coding_sql            = db.Column(db.Boolean, default=False)  # Can code in SQL
+    coding_python         = db.Column(db.Boolean, default=False)  # Can code in Python
+    working_experience    = db.Column(db.Integer)                 # 1–5 rating
+    communication_skill   = db.Column(db.Integer)                 # 1–5 rating
 
     is_shared             = db.Column(db.Boolean, default=False)  # Whether profile is shareable
 
@@ -73,7 +81,7 @@ class Document(db.Model):
 
     def __repr__(self):
         return f"<Document {self.file_name!r} of user {self.user_id}>"
-    
+
 class SharedWith(db.Model):
     __tablename__ = 'shared_with'
     document_id       = db.Column(
@@ -91,7 +99,6 @@ class VizShare(db.Model):
     __tablename__ = 'viz_share'
     owner_id          = db.Column(db.Integer, db.ForeignKey('users.id'),     primary_key=True)
     shared_to_user_id = db.Column(db.Integer, db.ForeignKey('users.id'),     primary_key=True)
-
 
 # ------------------------------
 # Password Reset Token Data
