@@ -4,6 +4,7 @@
 
 {% block content %}
 <div class="container">
+  <!-- Greeting -->
   <h2 class="h3 mb-4">Hi, {{ session.get('username', 'User') }}!</h2>
 
   <!-- Summary Cards -->
@@ -43,59 +44,18 @@
   </div>
 
   <!-- Quick Actions -->
-  <div class="row g-3 mb-4">
+  <div class="row g-3 mb-5">
     <div class="col-md-3">
       <a href="{{ url_for('upload_document') }}" class="btn btn-primary w-100">Upload Data</a>
     </div>
     <div class="col-md-3">
-      <a href="{{ url_for('visualize') }}" class="btn btn-success w-100">Visualize Data</a>
+      <a href="{{ url_for('visualize') }}" class="btn btn-secondary w-100">View Job-Fit</a>
     </div>
     <div class="col-md-3">
-      <a href="{{ url_for('share') }}" class="btn btn-warning w-100">Manage Sharing</a>
+      <a href="{{ url_for('jobs') }}" class="btn btn-warning w-100">My Jobs</a>
     </div>
     <div class="col-md-3">
-      <a href="{{ url_for('jobs') }}" class="btn btn-info w-100">My Career</a>
-    </div>
-  </div>
-
-  <!-- Recent Data Activity -->
-  <div class="card shadow-sm mb-4">
-    <div class="card-header">Recent Data Activity</div>
-    <ul class="list-group list-group-flush">
-      {% for item in recent %}
-        <li class="list-group-item">{{ item }}</li>
-      {% else %}
-        <li class="list-group-item text-muted">No recent activity.</li>
-      {% endfor %}
-    </ul>
-  </div>
-
-  <!-- Recent Job Applications -->
-  <div class="card shadow-sm">
-    <div class="card-header">Recent Job Applications</div>
-    <div class="table-responsive">
-      <table class="table mb-0">
-        <thead class="table-light">
-          <tr>
-            <th scope="col">Date</th>
-            <th scope="col">Position</th>
-            <th scope="col">Company</th>
-            <th scope="col">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for app in (job_apps|default([]))[:5] %}
-          <tr>
-            <td>{{ app.application_date.strftime('%Y-%m-%d') }}</td>
-            <td>{{ app.job_title }}</td>
-            <td>{{ app.company_name }}</td>
-            <td>{{ app.status.capitalize() }}</td>
-          </tr>
-          {% else %}
-          <tr><td colspan="4" class="text-center text-muted">No recent applications.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <a href="{{ url_for('share') }}" class="btn btn-info w-100">Share with Others</a>
     </div>
   </div>
 </div>
