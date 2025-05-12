@@ -116,3 +116,19 @@ class PasswordResetToken(db.Model):
 
     def is_valid(self):
         return (not self.used) and self.expires_at > datetime.utcnow()
+    
+# ------------------------------
+# Job History
+# ------------------------------    
+class JobHistory(db.Model):
+    __tablename__ = 'job_history'  # optional, but good practice
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    company_name = db.Column(db.String(100), nullable=False)
+    position = db.Column(db.String(100), nullable=False)
+    start_date = db.Column(db.Date)
+    end_date = db.Column(db.Date)
+    description = db.Column(db.Text)
+    salary = db.Column(db.String(100))  # or Float/Integer if needed
+
+
