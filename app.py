@@ -183,9 +183,6 @@ def dashboard():
         recent=[], job_apps=[]
     )
 
-# ---------------------------------
-# Upload (Profile + Document)
-# ---------------------------------
 # Edit profile only
 @application.route('/edit_profile', methods=['GET', 'POST'])
 def edit_profile():
@@ -197,20 +194,34 @@ def edit_profile():
 
     if request.method == 'POST':
         prof.full_name = request.form.get('full_name')
-        prof.age = request.form.get('age', type=int)
+        prof.age       = request.form.get('age', type=int)
         bd = request.form.get('birth_date')
         if bd:
             prof.birth_date = datetime.strptime(bd, '%Y-%m-%d').date()
+
         prof.education = request.form.get('education')
-        prof.school = request.form.get('school')
+        prof.gpa       = request.form.get('gpa')  # ← added
+
+        prof.school          = request.form.get('school')
         gd = request.form.get('graduation_date')
         if gd:
             prof.graduation_date = datetime.strptime(gd, '%Y-%m-%d').date()
-        prof.expected_company = request.form.get('expected_company')
-        prof.career_goal = request.form.get('career_goal')
-        prof.self_description = request.form.get('self_description')
+
+        prof.expected_company   = request.form.get('expected_company')
+        prof.career_goal        = request.form.get('career_goal')
+        prof.self_description   = request.form.get('self_description')
         prof.internship_experience = request.form.get('internship_experience')
-        prof.is_shared = 'is_shared' in request.form
+        prof.is_shared            = 'is_shared' in request.form
+
+        # ← new fields below
+        prof.coding_c      = 'coding_c'      in request.form
+        prof.coding_cpp    = 'coding_cpp'    in request.form
+        prof.coding_java   = 'coding_java'   in request.form
+        prof.coding_sql    = 'coding_sql'    in request.form
+        prof.coding_python = 'coding_python' in request.form
+
+        prof.communication_skill = request.form.get('communication_skill', type=int) or 0
+        prof.working_experience  = request.form.get('working_experience',  type=int) or 0
 
         db.session.add(prof)
         db.session.commit()
@@ -249,6 +260,7 @@ def upload_document():
         return redirect(url_for('profile_view'))
 
     return render_template('upload_document.html')
+
 
 # Delete document
 @application.route('/delete_document/<int:doc_id>', methods=['POST'])
@@ -329,14 +341,41 @@ def visualize():
     # 8. Aggregate into a single fit_score percentage
     fit_score = round((0.5 * completeness + 0.3 * skill_score + 0.2 * doc_score) * 100)
 
-    # 9. Render the visualization template
+    # 9.compute values for radar (“star”) chart ---
+    edu_map = {'Diploma': 1, 'Bachelor': 2, 'Master': 3, 'PhD': 4}
+    education_val = edu_map.get(profile.education, 0)
+
+    gpa_map = {'P': 2, 'CR': 3, 'D': 4, 'HD': 5}
+    gpa_val = gpa_map.get(profile.gpa, 0)
+
+    # --- safely count how many coding skills are True (None → 0) ---
+    coding_val = sum([
+        profile.coding_c      or 0,
+        profile.coding_cpp    or 0,
+        profile.coding_java   or 0,
+        profile.coding_sql    or 0,
+        profile.coding_python or 0
+    ])
+
+    # make sure missing ratings default to 0
+    comm_val = profile.communication_skill or 0
+    exp_val  = profile.working_experience   or 0
+
+    star_labels = ['Education', 'GPA', 'Coding', 'Communication', 'Experience']
+    star_values = [education_val, gpa_val, coding_val, comm_val, exp_val]
+
+    # 10. pass into template ---
     return render_template(
         'visualize.html',
         completeness=int(completeness * 100),
         skill_score=int(skill_score * 100),
         doc_score=int(doc_score * 100),
-        fit_score=fit_score
+        fit_score=fit_score,
+        star_labels=star_labels,
+        star_values=star_values
     )
+
+
 
 @application.route('/share', methods=['GET', 'POST'])
 def share():
