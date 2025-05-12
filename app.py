@@ -17,8 +17,8 @@ from model import db, User, Profile, Document, PasswordResetToken, SharedWith, V
 from flask_mail import Mail, Message
 from flask_migrate import Migrate  # ✅ Added
 from datetime import datetime
-
 import requests
+from forms import JobHistoryForm
 
 # ---------------------------------
 # App Initialization
@@ -490,13 +490,31 @@ def shared():
         viz_owners=viz_owners
     )
 
-@application.route('/jobs', methods=['GET'])
+@application.route('/jobs', methods=['GET', 'POST'])
 def jobs():
     user_id = session.get('user_id')
     if not user_id:
         return redirect(url_for('login'))
+
+    form = JobHistoryForm()
+
+    if form.validate_on_submit():
+        job = JobHistory(
+            user_id=user_id,
+            company_name=form.company_name.data,
+            position=form.position.data,
+            start_date=form.start_date.data,
+            end_date=form.end_date.data,
+            salary=form.salary.data,
+            description=form.description.data
+        )
+        db.session.add(job)
+        db.session.commit()
+        flash("Job history uploaded successfully!", "success")
+        return redirect(url_for('jobs'))
+
     history = JobHistory.query.filter_by(user_id=user_id).all()
-    return render_template('jobs.html', history=history)
+    return render_template('jobs.html', form=form, history=history)
 
 
 @application.route('/profile')
