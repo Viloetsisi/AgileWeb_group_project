@@ -13,9 +13,11 @@ from flask import (
     redirect, url_for, flash,
     session, jsonify
 )
-from model import db, User, Profile, Document, PasswordResetToken, SharedWith,VizShare  # ✅ Added
+from model import db, User, Profile, Document, PasswordResetToken, SharedWith, VizShare, JobHistory
 from flask_mail import Mail, Message
 from flask_migrate import Migrate  # ✅ Added
+from datetime import datetime
+
 import requests
 
 # ---------------------------------
@@ -248,6 +250,29 @@ def upload_document():
 
     return render_template('upload_document.html')
 
+# Delete document
+@application.route('/delete_document/<int:doc_id>', methods=['POST'])
+def delete_document(doc_id):
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+
+    doc = Document.query.get_or_404(doc_id)
+    if doc.user_id != user_id:
+        flash("You are not authorized to delete this document.", "danger")
+        return redirect(url_for('profile_view'))
+
+    try:
+        os.remove(doc.file_path)
+    except Exception as e:
+        print(f"Error deleting file: {e}")
+
+    db.session.delete(doc)
+    db.session.commit()
+    flash("Document deleted successfully.", "success")
+    return redirect(url_for('profile_view'))
+
+
 
 # ---------------------------------
 # Visualize, Share, Jobs
@@ -426,9 +451,14 @@ def shared():
         viz_owners=viz_owners
     )
 
-@application.route('/jobs')
+@application.route('/jobs', methods=['GET'])
 def jobs():
-    return render_template('jobs.html')
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+    history = JobHistory.query.filter_by(user_id=user_id).all()
+    return render_template('jobs.html', history=history)
+
 
 @application.route('/profile')
 def profile_view():
@@ -439,6 +469,58 @@ def profile_view():
     profile = Profile.query.filter_by(user_id=user_id).first()
     documents = Document.query.filter_by(user_id=user_id).all()
     return render_template('profile.html', user=user, profile=profile, documents=documents)
+
+@application.route('/api/job_history/<int:user_id>')
+def get_job_history(user_id):
+    from model import JobHistory  # make sure it's imported if not already
+    history = JobHistory.query.filter_by(user_id=user_id).all()
+    return jsonify([
+        {
+            'company_name': h.company_name,
+            'position': h.position,
+            'start_date': h.start_date.strftime('%Y-%m-%d') if h.start_date else '',
+            'end_date': h.end_date.strftime('%Y-%m-%d') if h.end_date else '',
+            'description': h.description or ''
+        }
+        for h in history
+    ])
+    
+# ---------------------------------
+# Job History Upload
+# ---------------------------------    
+@application.route('/upload_job_history', methods=['POST'])
+def upload_job_history():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+
+    company_name = request.form.get('company_name')
+    position = request.form.get('position')
+    description = request.form.get('description')
+
+    # Parse dates safely
+    start_date_raw = request.form.get('start_date')
+    end_date_raw = request.form.get('end_date')
+    start_date = datetime.strptime(start_date_raw, '%Y-%m-%d').date() if start_date_raw else None
+    end_date = datetime.strptime(end_date_raw, '%Y-%m-%d').date() if end_date_raw else None
+    salary = request.form.get('salary')
+
+    job = JobHistory(
+        user_id=user_id,
+        company_name=company_name,
+        position=position,
+        start_date=start_date,
+        end_date=end_date,
+        description=description,
+        salary=salary
+        
+    )
+
+    db.session.add(job)
+    db.session.commit()
+
+    flash("Job history uploaded successfully!", "success")
+    return redirect(url_for('jobs'))
 
 # ---------------------------------
 # Career Market
