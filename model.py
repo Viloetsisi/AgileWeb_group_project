@@ -43,7 +43,9 @@ class Profile(db.Model):
     career_goal           = db.Column(db.String(200))    # Target career path
     self_description      = db.Column(db.Text)           # Personal bio or summary
     internship_experience = db.Column(db.Text)           # Internship details
-    gpa                   = db.Column(db.String(10))     # GPA (Dropdown: P, CR, D, HD)
+
+    gpa                   = db.Column(db.String(10))     # GPA (Dropdown: P, PR, D, HD)
+
 
     # New Fields
     coding_c              = db.Column(db.Boolean, default=False)  # Can code in C
