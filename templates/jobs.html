@@ -1,41 +1,63 @@
 {% extends "base.html" %}
-
 {% block title %}My Job Applications{% endblock %}
 
 {% block content %}
 <div class="container mx-auto mt-10 p-6 bg-white rounded-xl shadow-md w-full max-w-4xl">
-    <h2 class="text-2xl font-semibold text-center mb-6">My Job Applications</h2>
-    <table class="min-w-full border text-sm">
-        <thead class="bg-gray-100">
-            <tr>
-                <th class="py-2 px-4 border">Job Title</th>
-                <th class="py-2 px-4 border">Company</th>
-                <th class="py-2 px-4 border">Date</th>
-                <th class="py-2 px-4 border">Status</th>
-            </tr>
-        </thead>
-        <tbody id="job-table-body">
-            <!-- Data will be inserted here -->
-        </tbody>
-    </table>
-</div>
 
-<script>
-    $(document).ready(function () {
-        // 临时设定为 user_id = 1
-        const userId = 1;
-        $.get(`/api/jobs/${userId}`, function (data) {
-            data.forEach(job => {
-                $('#job-table-body').append(`
-                    <tr>
-                        <td class="py-2 px-4 border">${job.job_title}</td>
-                        <td class="py-2 px-4 border">${job.company_name}</td>
-                        <td class="py-2 px-4 border">${job.application_date}</td>
-                        <td class="py-2 px-4 border">${job.status}</td>
-                    </tr>
-                `);
-            });
-        });
-    });
-</script>
+  <!-- Flash message -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="mb-4 p-4 rounded bg-green-100 text-green-800 border border-green-300">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Add Job History Form -->
+  <h2 class="text-2xl font-semibold text-center mb-6">Add Job History</h2>
+  <form method="POST" action="{{ url_for('upload_job_history') }}" class="mb-8">
+    <div class="grid grid-cols-1 gap-4">
+      <input type="text" name="company_name" placeholder="Company Name" class="p-2 border rounded" required>
+      <input type="text" name="position" placeholder="Position/Role" class="p-2 border rounded" required>
+      <div class="grid grid-cols-2 gap-4">
+        <input type="date" name="start_date" placeholder="Start Date" class="p-2 border rounded" required>
+        <input type="date" name="end_date" placeholder="End Date" class="p-2 border rounded">
+      </div>
+      <input type="text" name="salary" placeholder="Salary" class="p-2 border rounded">
+      <textarea name="description" rows="3" placeholder="Description (optional)" class="p-2 border rounded"></textarea>
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Submit</button>
+    </div>
+  </form>
+
+  <!-- Job History Table -->
+  <h2 class="text-2xl font-semibold text-center mt-12 mb-6">My Job History</h2>
+  <table class="min-w-full border text-sm mb-12">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="py-2 px-4 border">Company</th>
+        <th class="py-2 px-4 border">Position</th>
+        <th class="py-2 px-4 border">Start Date</th>
+        <th class="py-2 px-4 border">End Date</th>
+        <th class="py-2 px-4 border">Salary</th>
+        <th class="py-2 px-4 border">Description</th>
+        
+      </tr>
+    </thead>
+    <tbody>
+      {% for h in history %}
+      <tr>
+        <td class="py-2 px-4 border">{{ h.company_name }}</td>
+        <td class="py-2 px-4 border">{{ h.position }}</td>
+        <td class="py-2 px-4 border">{{ h.start_date }}</td>
+        <td class="py-2 px-4 border">{{ h.end_date or '—' }}</td>
+        <td class="py-2 px-4 border">{{ h.salary or '—' }}</td>
+        <td class="py-2 px-4 border">{{ h.description or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+</div>
 {% endblock %}
