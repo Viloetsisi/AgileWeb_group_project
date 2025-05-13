@@ -91,6 +91,7 @@ def login():
         if user and check_password_hash(user.password, pwd):
             session.clear()
             session['user_id'] = user.id
+            session['username']  = user.username
             flash("Logged in successfully.", "success")
             return redirect(url_for('dashboard'))
         flash("Invalid user or password.", "danger")
@@ -175,13 +176,53 @@ def dashboard():
     user_id = session.get('user_id')
     if not user_id:
         return redirect(url_for('login'))
+
+    # 1. Count uploaded documents
     uploads = Document.query.filter_by(user_id=user_id).count()
-    shared  = Document.query.filter_by(user_id=user_id, is_shared=True).count()
+
+    # 2. Count distinct items shared by this user
+    shared = (
+        SharedWith.query
+            .join(Document, SharedWith.document_id == Document.id)
+            .filter(Document.user_id == user_id)
+            .with_entities(SharedWith.document_id)
+            .distinct()
+            .count()
+    )
+
+    # 3. Count job applications
+    applications = JobHistory.query.filter_by(user_id=user_id).count()
+
+    # 4. Compute Job-Fit Score (same logic as /visualize)
+    profile  = Profile.query.filter_by(user_id=user_id).first() or Profile(user_id=user_id)
+    docs     = Document.query.filter_by(user_id=user_id).all()
+
+    fields       = [
+        profile.full_name, profile.education,
+        profile.school, profile.graduation_date,
+        profile.career_goal
+    ]
+    completeness = sum(bool(f) for f in fields) / len(fields)
+    doc_score    = min(len(docs) / 3, 1.0)
+
+    required_skills = {'Data Analysis', 'Python', 'Communication'}
+    user_skills     = set(profile.career_goal.split(',')) if profile.career_goal else set()
+    skill_score     = len(required_skills & user_skills) / len(required_skills)
+
+    fit_score  = round((0.5 * completeness + 0.3 * skill_score + 0.2 * doc_score) * 100)
+
     return render_template(
         'dashboard.html',
-        stats={'uploads': uploads, 'shared': shared, 'applications': 0, 'fit_score': 0},
+        stats={
+            'uploads':      uploads,
+            'shared':       shared,
+            'applications': applications,
+            'fit_score':    fit_score
+        },
         recent=[], job_apps=[]
     )
+
+
 
 # Edit profile only
 @application.route('/edit_profile', methods=['GET', 'POST'])
@@ -333,13 +374,13 @@ def visualize():
     # 6. Compute Document strength score (cap at 1.0)
     doc_score = min(len(docs) / 3, 1.0)
 
-    # 7. Compute Skill-match (example logic)
-    required_skills = {'Data Analysis', 'Python', 'Communication'}
-    user_skills = set(profile.career_goal.split(',')) if profile.career_goal else set()
-    skill_score = len(required_skills & user_skills) / len(required_skills)
+    # 7. # map working_experience (years) to a 0–100% score (cap at 5 yrs → 100%)
+    years = profile.working_experience or 0
+    experience_frac  = min(years / 5.0, 1.0)
+    experience_score = round(experience_frac * 100)
 
     # 8. Aggregate into a single fit_score percentage
-    fit_score = round((0.5 * completeness + 0.3 * skill_score + 0.2 * doc_score) * 100)
+    fit_score = round((0.5 * completeness + 0.3 * experience_frac + 0.2 * doc_score) * 100)
 
     # 9.compute values for radar (“star”) chart ---
     edu_map = {'Diploma': 1, 'Bachelor': 2, 'Master': 3, 'PhD': 4}
@@ -366,13 +407,13 @@ def visualize():
 
     # 10. pass into template ---
     return render_template(
-        'visualize.html',
-        completeness=int(completeness * 100),
-        skill_score=int(skill_score * 100),
-        doc_score=int(doc_score * 100),
-        fit_score=fit_score,
-        star_labels=star_labels,
-        star_values=star_values
+    'visualize.html',
+    completeness=round(completeness*100),
+    experience_score= experience_score,
+    doc_score=round(doc_score*100),
+    fit_score=fit_score,
+    star_labels=star_labels,
+    star_values=star_values
     )
 
 

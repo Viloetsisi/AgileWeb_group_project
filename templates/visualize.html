@@ -4,7 +4,7 @@
 {% block content %}
   <h2 class="h3 mb-4 text-center">Your Career Fit Dashboard</h2>
 
-  <!-- Overall Working Experience Gauge -->
+  <!-- Overall Fit Score Gauge -->
   <div class="d-flex justify-content-center mb-4" style="max-width:200px; margin:auto;">
     <canvas id="expGauge" width="200" height="200"></canvas>
   </div>
@@ -14,32 +14,26 @@
     <div class="col-md-4">
       <h5>Profile Completeness</h5>
       <div class="progress">
-        <div class="progress-bar bg-info" role="progressbar" style="width: {{ completeness }}%">
-          {{ completeness }}%
-        </div>
+        <div class="progress-bar bg-info" role="progressbar" style="width: {{ completeness }}%;" aria-valuenow="{{ completeness }}" aria-valuemin="0" aria-valuemax="100">{{ completeness }}%</div>
       </div>
     </div>
     <div class="col-md-4">
       <h5>Working Experience</h5>
       <div class="progress">
-        <div class="progress-bar bg-success" role="progressbar" style="width: {{ star_values[4] * 20 }}%">
-          {{ star_values[4] * 20 }}%
-        </div>
+        <div class="progress-bar bg-success" role="progressbar" style="width: {{ experience_score }}%;" aria-valuenow="{{ experience_score }}" aria-valuemin="0" aria-valuemax="100">{{ experience_score }}%</div>
       </div>
     </div>
     <div class="col-md-4">
       <h5>Documents</h5>
       <div class="progress">
-        <div class="progress-bar bg-warning" role="progressbar" style="width: {{ doc_score }}%">
-          {{ doc_score }}%
-        </div>
+        <div class="progress-bar bg-warning" role="progressbar" style="width: {{ doc_score }}%;" aria-valuenow="{{ doc_score }}" aria-valuemin="0" aria-valuemax="100">{{ doc_score }}%</div>
       </div>
     </div>
   </div>
 
-  <!-- Radar (Star) Chart -->
-  <div class="d-flex justify-content-center mb-4" style="max-width:400px; margin:auto;">
-    <canvas id="starChart" width="400" height="400"></canvas>
+  <!-- Radar chart -->
+  <div class="d-flex justify-content-center mb-5">
+    <canvas id="starChart" width="600" height="600"></canvas>
   </div>
 {% endblock %}
 
@@ -47,10 +41,11 @@
   {{ super() }}
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- Working Experience Gauge -->
+  <!-- Overall Fit Score Gauge Script -->
   <script>
     const expCtx = document.getElementById('expGauge').getContext('2d');
-    const expValue = {{ star_values[4] * 20 }};
+    // Use overall fit_score instead of just experience
+    const expValue = {{ fit_score }};
     new Chart(expCtx, {
       type: 'doughnut',
       data: {
@@ -61,22 +56,17 @@
         }]
       },
       options: {
+        cutout: '80%',
         responsive: false,
-        rotation: -90,
-        cutout: '70%',
         plugins: {
           tooltip: { enabled: false },
-          legend: { display: false },
-          centerText: {
-            display: true,
-            text: expValue + '%'
-          }
+          legend: { display: false }
         }
       }
     });
   </script>
 
-  <!-- Skills & Qualifications Radar Chart -->
+  <!-- Radar ("Skills & Qualifications") Chart Script -->
   <script>
     const starCtx = document.getElementById('starChart').getContext('2d');
     new Chart(starCtx, {
