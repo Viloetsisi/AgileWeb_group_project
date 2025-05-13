@@ -1,0 +1,49 @@
+import unittest
+from app import application, db
+from model import User
+
+class UserModelTestCase(unittest.TestCase):
+    def setUp(self):
+        application.config['TESTING'] = True
+        application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+        self.app = application.test_client()
+        with application.app_context():
+            db.create_all()
+
+    def tearDown(self):
+        with application.app_context():
+            db.drop_all()
+
+    def test_user_creation(self):
+        u = User(username='testuser', email='test@example.com', password='hashedpass')
+        db.session.add(u)
+        db.session.commit()
+        self.assertEqual(User.query.count(), 1)
+
+    def test_duplicate_email(self):
+        u1 = User(username='u1', email='e@example.com', password='p')
+        u2 = User(username='u2', email='e@example.com', password='p')
+        db.session.add(u1)
+        db.session.commit()
+        db.session.add(u2)
+        with self.assertRaises(Exception):
+            db.session.commit()
+
+    def test_signup_page_exists(self):
+        response = self.app.get('/signup')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Sign Up', response.data)
+
+    def test_login_with_wrong_password(self):
+        u = User(username='abc', email='abc@ex.com', password='hash')
+        db.session.add(u)
+        db.session.commit()
+        response = self.app.post('/login', data={
+            'username': 'abc',
+            'password': 'wrong'
+        }, follow_redirects=True)
+        self.assertIn(b'Invalid', response.data)
+
+    def test_index_page(self):
+        response = self.app.get('/')
+        self.assertEqual(response.status_code, 200)
