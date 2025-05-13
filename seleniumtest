@@ -1,0 +1,54 @@
+import unittest
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from threading import Thread
+import time
+from app import application
+
+class LiveServerThread(Thread):
+    def run(self):
+        application.run(port=5001, debug=False, use_reloader=False)
+
+class SeleniumTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.server_thread = LiveServerThread()
+        cls.server_thread.daemon = True
+        cls.server_thread.start()
+        time.sleep(2)  # 给服务器一点时间启动
+
+        cls.driver = webdriver.Chrome()
+        cls.base_url = 'http://localhost:5001'
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.driver.quit()
+
+    def test_1_home_page(self):
+        self.driver.get(self.base_url)
+        self.assertIn("PathFinder", self.driver.page_source)
+
+    def test_2_signup_form(self):
+        self.driver.get(self.base_url + "/signup")
+        self.driver.find_element(By.NAME, "username").send_keys("seleniumuser")
+        self.driver.find_element(By.NAME, "email").send_keys("selenium@example.com")
+        self.driver.find_element(By.NAME, "password").send_keys("pass1234")
+        self.driver.find_element(By.NAME, "confirm_password").send_keys("pass1234")
+        self.driver.find_element(By.XPATH, '//button[@type="submit"]').click()
+        self.assertIn("Account created", self.driver.page_source)
+
+    def test_3_login_form(self):
+        self.driver.get(self.base_url + "/login")
+        self.driver.find_element(By.NAME, "username").send_keys("seleniumuser")
+        self.driver.find_element(By.NAME, "password").send_keys("pass1234")
+        self.driver.find_element(By.XPATH, '//button[@type="submit"]').click()
+        self.assertIn("Dashboard", self.driver.page_source)
+
+    def test_4_upload_page_access(self):
+        self.driver.get(self.base_url + "/upload")
+        self.assertIn("Please log in", self.driver.page_source)
+
+    def test_5_404(self):
+        self.driver.get(self.base_url + "/thispagedoesnotexist")
+        self.assertIn("Not Found", self.driver.page_source)
+
