@@ -2,62 +2,105 @@
 {% block title %}My Job Applications{% endblock %}
 
 {% block content %}
-<div class="container mx-auto mt-10 p-6 bg-white rounded-xl shadow-md w-full max-w-4xl">
+<div class="container-sm bg-white p-4 rounded shadow-sm mt-4">
 
   <!-- Flash message -->
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for category, message in messages %}
-        <div class="mb-4 p-4 rounded bg-green-100 text-green-800 border border-green-300">
+        <div class="alert alert-success text-center" role="alert">
           {{ message }}
         </div>
       {% endfor %}
     {% endif %}
   {% endwith %}
 
-  <!-- Add Job History Form -->
-  <h2 class="text-2xl font-semibold text-center mb-6">Add Job History</h2>
-  <form method="POST" action="{{ url_for('upload_job_history') }}" class="mb-8">
-    <div class="grid grid-cols-1 gap-4">
-      <input type="text" name="company_name" placeholder="Company Name" class="p-2 border rounded" required>
-      <input type="text" name="position" placeholder="Position/Role" class="p-2 border rounded" required>
-      <div class="grid grid-cols-2 gap-4">
-        <input type="date" name="start_date" placeholder="Start Date" class="p-2 border rounded" required>
-        <input type="date" name="end_date" placeholder="End Date" class="p-2 border rounded">
-      </div>
-      <input type="text" name="salary" placeholder="Salary" class="p-2 border rounded">
-      <textarea name="description" rows="3" placeholder="Description (optional)" class="p-2 border rounded"></textarea>
-      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Submit</button>
-    </div>
-  </form>
+  <!-- Job History Form -->
+  <h2 class="h4 text-center mb-4">Add Job History</h2>
+  <form method="POST">
+    {{ form.hidden_tag() }}
 
-  <!-- Job History Table -->
-  <h2 class="text-2xl font-semibold text-center mt-12 mb-6">My Job History</h2>
-  <table class="min-w-full border text-sm mb-12">
-    <thead class="bg-gray-100">
-      <tr>
-        <th class="py-2 px-4 border">Company</th>
-        <th class="py-2 px-4 border">Position</th>
-        <th class="py-2 px-4 border">Start Date</th>
-        <th class="py-2 px-4 border">End Date</th>
-        <th class="py-2 px-4 border">Salary</th>
-        <th class="py-2 px-4 border">Description</th>
-        
-      </tr>
-    </thead>
-    <tbody>
-      {% for h in history %}
-      <tr>
-        <td class="py-2 px-4 border">{{ h.company_name }}</td>
-        <td class="py-2 px-4 border">{{ h.position }}</td>
-        <td class="py-2 px-4 border">{{ h.start_date }}</td>
-        <td class="py-2 px-4 border">{{ h.end_date or '—' }}</td>
-        <td class="py-2 px-4 border">{{ h.salary or '—' }}</td>
-        <td class="py-2 px-4 border">{{ h.description or '—' }}</td>
-      </tr>
+    <div class="mb-3">
+      {{ form.company_name.label(class="form-label") }}
+      {{ form.company_name(class="form-control") }}
+      {% for error in form.company_name.errors %}
+        <div class="text-danger">{{ error }}</div>
       {% endfor %}
-    </tbody>
-  </table>
+    </div>
 
+    <div class="mb-3">
+      {{ form.position.label(class="form-label") }}
+      {{ form.position(class="form-control") }}
+      {% for error in form.position.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        {{ form.start_date.label(class="form-label") }}
+        {{ form.start_date(class="form-control") }}
+        {% for error in form.start_date.errors %}
+          <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+      </div>
+      <div class="col-md-6">
+        {{ form.end_date.label(class="form-label") }}
+        {{ form.end_date(class="form-control") }}
+        {% for error in form.end_date.errors %}
+          <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="mb-3 mt-3">
+      {{ form.salary.label(class="form-label") }}
+      {{ form.salary(class="form-control") }}
+      {% for error in form.salary.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mb-3">
+      {{ form.description.label(class="form-label") }}
+      {{ form.description(class="form-control", rows="3") }}
+      {% for error in form.description.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    {{ form.submit(class="btn btn-primary w-100") }}
+  </form>
+</div>
+
+<!-- Job History Table -->
+<div class="container-sm bg-white p-4 rounded shadow-sm mt-5">
+  <h2 class="h4 text-center mb-4">My Job History</h2>
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle text-center">
+      <thead class="table-light">
+        <tr>
+          <th>Company</th>
+          <th>Position</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Salary</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for h in history %}
+        <tr>
+          <td>{{ h.company_name }}</td>
+          <td>{{ h.position }}</td>
+          <td>{{ h.start_date }}</td>
+          <td>{{ h.end_date or '—' }}</td>
+          <td>{{ h.salary or '—' }}</td>
+          <td>{{ h.description or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 {% endblock %}
