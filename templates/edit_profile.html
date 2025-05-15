@@ -4,142 +4,151 @@
 {% block content %}
 <div class="container-sm bg-white p-4 rounded shadow-sm">
   <h2 class="h3 text-center mb-4">Upload Your Profile</h2>
-  <form action="{{ url_for('edit_profile') }}" method="post">
+  <form method="POST">
+    {{ form.hidden_tag() }}
+
     <!-- Full Name -->
     <div class="mb-3">
-      <label for="full_name" class="form-label">Full Name</label>
-      <input type="text" class="form-control" id="full_name" name="full_name"
-             value="{{ profile.full_name or '' }}" required>
+      {{ form.full_name.label(class="form-label") }}
+      {{ form.full_name(class="form-control") }}
+      {% for error in form.full_name.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
     </div>
+
     <!-- Age -->
     <div class="mb-3">
-      <label for="age" class="form-label">Age</label>
-      <input type="number" class="form-control" id="age" name="age" min="0"
-             value="{{ profile.age or '' }}">
+      {{ form.age.label(class="form-label") }}
+      {{ form.age(class="form-control") }}
+      {% for error in form.age.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
     </div>
+
     <!-- Birth Date -->
     <div class="mb-3">
-      <label for="birth_date" class="form-label">Birth Date</label>
-      <input type="date" class="form-control" id="birth_date" name="birth_date"
-             value="{{ profile.birth_date }}">
+      {{ form.birth_date.label(class="form-label") }}
+      {{ form.birth_date(class="form-control") }}
+      {% for error in form.birth_date.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
     </div>
 
     <!-- Education Level -->
     <div class="mb-3">
-      <label for="education" class="form-label">Highest Education</label>
-      <select class="form-select" id="education" name="education" required>
-        <option value="" disabled {% if not profile.education %}selected{% endif %}>Choose…</option>
-        {% for level in ['Diploma','Bachelor','Master','PhD'] %}
-        <option value="{{ level }}"
-          {% if profile.education == level %}selected{% endif %}>
-          {{ level }}
-        </option>
-        {% endfor %}
-      </select>
+      {{ form.education.label(class="form-label") }}
+      {{ form.education(class="form-select") }}
+      {% for error in form.education.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
     </div>
 
     <!-- GPA -->
     <div class="mb-3">
-      <label for="gpa" class="form-label">GPA</label>
-      <select class="form-select" id="gpa" name="gpa" required>
-        <option value="" disabled {% if not profile.gpa %}selected{% endif %}>Choose…</option>
-        {% for grade in ['P','CR','D','HD'] %}
-        <option value="{{ grade }}"
-          {% if profile.gpa == grade %}selected{% endif %}>
-          {{ grade }}
-        </option>
-        {% endfor %}
-      </select>
+      {{ form.gpa.label(class="form-label") }}
+      {{ form.gpa(class="form-select") }}
+      {% for error in form.gpa.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
     </div>
 
     <!-- Coding Skills -->
     <div class="mb-3">
       <label class="form-label">Coding Skills</label>
       <div>
-        {% for lang, attr in [
-           ('C','coding_c'),
-           ('C++','coding_cpp'),
-           ('Java','coding_java'),
-           ('SQL','coding_sql'),
-           ('Python','coding_python')
-         ] %}
         <div class="form-check form-check-inline">
-          <input class="form-check-input"
-                 type="checkbox"
-                 id="{{ attr }}"
-                 name="{{ attr }}"
-                 {% if profile[attr] %}checked{% endif %}>
-          <label class="form-check-label" for="{{ attr }}">{{ lang }}</label>
+          {{ form.coding_c(class="form-check-input") }}
+          {{ form.coding_c.label(class="form-check-label") }}
         </div>
-        {% endfor %}
+        <div class="form-check form-check-inline">
+          {{ form.coding_cpp(class="form-check-input") }}
+          {{ form.coding_cpp.label(class="form-check-label") }}
+        </div>
+        <div class="form-check form-check-inline">
+          {{ form.coding_java(class="form-check-input") }}
+          {{ form.coding_java.label(class="form-check-label") }}
+        </div>
+        <div class="form-check form-check-inline">
+          {{ form.coding_sql(class="form-check-input") }}
+          {{ form.coding_sql.label(class="form-check-label") }}
+        </div>
+        <div class="form-check form-check-inline">
+          {{ form.coding_python(class="form-check-input") }}
+          {{ form.coding_python.label(class="form-check-label") }}
+        </div>
       </div>
     </div>
 
     <!-- Communication Skill -->
     <div class="mb-3">
-      <label for="communication_skill" class="form-label">Communication Skill</label>
-      <select class="form-select" id="communication_skill" name="communication_skill" required>
-        <option value="" disabled {% if not profile.communication_skill %}selected{% endif %}>Choose…</option>
-        {% for i in [1,2,3,4,5] %}
-        <option value="{{ i }}"
-          {% if profile.communication_skill == i %}selected{% endif %}>
-          {{ i }}
-        </option>
-        {% endfor %}
-      </select>
+      {{ form.communication_skill.label(class="form-label") }}
+      {{ form.communication_skill(class="form-select") }}
+      {% for error in form.communication_skill.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
     </div>
 
     <!-- Working Experience -->
     <div class="mb-3">
-      <label for="working_experience" class="form-label">Working Experience</label>
-      <select class="form-select" id="working_experience" name="working_experience" required>
-        <option value="" disabled {% if not profile.working_experience %}selected{% endif %}>Choose…</option>
-        <option value="1" {% if profile.working_experience == 1 %}selected{% endif %}>1 year</option>
-        <option value="2" {% if profile.working_experience == 2 %}selected{% endif %}>2 years</option>
-        <option value="3" {% if profile.working_experience == 3 %}selected{% endif %}>3 years</option>
-        <option value="4" {% if profile.working_experience == 4 %}selected{% endif %}>4 years</option>
-        <option value="5" {% if (profile.working_experience or 0) >= 5 %}selected{% endif %}>
-          5+ years
-        </option>
-      </select>
+      {{ form.working_experience.label(class="form-label") }}
+      {{ form.working_experience(class="form-select") }}
+      {% for error in form.working_experience.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
     </div>
 
     <!-- School -->
     <div class="mb-3">
-      <label for="school" class="form-label">School / University</label>
-      <input type="text" class="form-control" id="school" name="school"
-             value="{{ profile.school or '' }}">
-    </div>
-    <!-- Graduation Date -->
-    <div class="mb-3">
-      <label for="graduation_date" class="form-label">Graduation Date</label>
-      <input type="date" class="form-control" id="graduation_date" name="graduation_date"
-             value="{{ profile.graduation_date }}">
-    </div>
-    <!-- Career Goal -->
-    <div class="mb-3">
-      <label for="career_goal" class="form-label">Career Goal</label>
-      <input type="text" class="form-control" id="career_goal" name="career_goal"
-             value="{{ profile.career_goal or '' }}">
-    </div>
-    <!-- Self Description -->
-    <div class="mb-3">
-      <label for="self_description" class="form-label">Self Description</label>
-      <textarea class="form-control" id="self_description" name="self_description" rows="3">{{ profile.self_description or '' }}</textarea>
-    </div>
-    <!-- Internship Experience -->
-    <div class="mb-3">
-      <label for="internship_experience" class="form-label">Internship Experience</label>
-      <textarea class="form-control" id="internship_experience" name="internship_experience" rows="3">{{ profile.internship_experience or '' }}</textarea>
-    </div>
-    <!-- Make Profile Shareable -->
-    <div class="form-check mb-3">
-      <input class="form-check-input" type="checkbox" id="is_shared" name="is_shared"
-             {% if profile.is_shared %}checked{% endif %}>
-      <label class="form-check-label" for="is_shared">Make my profile shareable</label>
+      {{ form.school.label(class="form-label") }}
+      {{ form.school(class="form-control") }}
+      {% for error in form.school.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
     </div>
 
-    <button type="submit" class="btn btn-primary w-100">Save Profile</button>
+    <!-- Graduation Date -->
+    <div class="mb-3">
+      {{ form.graduation_date.label(class="form-label") }}
+      {{ form.graduation_date(class="form-control") }}
+      {% for error in form.graduation_date.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Career Goal -->
+    <div class="mb-3">
+      {{ form.career_goal.label(class="form-label") }}
+      {{ form.career_goal(class="form-control") }}
+      {% for error in form.career_goal.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Self Description -->
+    <div class="mb-3">
+      {{ form.self_description.label(class="form-label") }}
+      {{ form.self_description(class="form-control", rows="3") }}
+      {% for error in form.self_description.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Internship Experience -->
+    <div class="mb-3">
+      {{ form.internship_experience.label(class="form-label") }}
+      {{ form.internship_experience(class="form-control", rows="3") }}
+      {% for error in form.internship_experience.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Make Profile Shareable -->
+    <div class="form-check mb-3">
+      {{ form.is_shared(class="form-check-input") }}
+      {{ form.is_shared.label(class="form-check-label") }}
+    </div>
+
+    {{ form.submit(class="btn btn-primary w-100") }}
   </form>
   <p class="text-center text-muted mt-3">
     <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>

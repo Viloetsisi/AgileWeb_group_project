@@ -1,32 +1,29 @@
-{% extends "base.html" %} {% block title %}Log In – PathFinder{% endblock %} {%
-block content %}
+{% extends "base.html" %}
+{% block title %}Log In – PathFinder{% endblock %}
+{% block content %}
 <div class="container-sm bg-white p-4 rounded shadow-sm">
   <h2 class="h3 text-center mb-4">Welcome Back</h2>
-  <form action="{{ url_for('login') }}" method="post">
+  <form method="POST">
+    {{ form.hidden_tag() }}
+
     <div class="mb-3">
-      <label for="username" class="form-label">Username or Email</label>
-      <input
-        type="text"
-        class="form-control"
-        id="username"
-        name="username"
-        required
-      />
+      {{ form.username.label(class="form-label") }}
+      {{ form.username(class="form-control") }}
+      {% for error in form.username.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
     </div>
     <div class="mb-3">
       <label for="password" class="form-label">
-        Password
+        {{ form.password.label.text }}
         <a href="{{ url_for('forgot_password_get') }}">Forgot password?</a>
       </label>
-      <input
-        type="password"
-        class="form-control"
-        id="password"
-        name="password"
-        required
-      />
+      {{ form.password(class="form-control") }}
+      {% for error in form.password.errors %}
+        <div class="text-danger">{{ error }}</div>
+      {% endfor %}
     </div>
-    <button type="submit" class="btn btn-primary w-100">Log In</button>
+    {{ form.submit(class="btn btn-primary w-100") }}
   </form>
   <p class="text-center text-muted mt-3">
     Don’t have an account? <a href="{{ url_for('signup') }}">Sign Up</a>
