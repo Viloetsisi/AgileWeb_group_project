@@ -24,3 +24,195 @@ h1, h2, h3 {
 footer small {
   color: #6c757d;
 }
+
+/* General background gradients for sections */
+.section-bg-primary {
+  background: linear-gradient(120deg, #e3f0ff 0%, #f8fafc 100%);
+}
+.section-bg-secondary {
+  background: linear-gradient(100deg, #fffbe6 0%, #ffe4e1 100%);
+}
+
+/* Custom shadow for hoverable cards */
+.card-hover:hover {
+  box-shadow: 0 6px 24px rgba(0, 123, 255, 0.08), 0 1.5px 3px rgba(0,0,0,0.04);
+  transform: translateY(-4px) scale(1.02);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+/* Custom badge styles */
+.badge-custom {
+  background: #007bff;
+  color: #fff;
+  border-radius: 0.8em;
+  padding: 0.3em 0.8em;
+  font-size: 90%;
+  box-shadow: 0 1px 2px rgba(0,123,255,0.06);
+}
+
+/* Custom input placeholder style */
+::placeholder {
+  color: #b6b6c9;
+  opacity: 1;
+  font-style: italic;
+}
+
+/* Notification message style */
+.flash-message {
+  padding: 1em;
+  border-left: 4px solid #007bff;
+  background: #e3f0ff;
+  color: #222e3a;
+  margin-bottom: 1.5em;
+  border-radius: 0.4em;
+}
+
+/* Fancy link styles */
+a.fancy-link {
+  color: #007bff;
+  text-decoration: underline wavy #87cefa;
+  transition: color 0.2s;
+}
+a.fancy-link:hover {
+  color: #0056b3;
+  text-decoration: underline wavy #ffb347;
+}
+
+/* Progress bar styling */
+.progress-bar-custom {
+  background: linear-gradient(90deg, #007bff 70%, #4fc3f7 100%);
+  border-radius: 12px;
+  height: 1.2rem;
+}
+
+/* Custom modal overlay */
+.modal-custom {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+/* Table row highlighting on hover */
+.table-hover tbody tr:hover {
+  background-color: #f1f7ff;
+}
+
+/* Timeline vertical line (if used) */
+.timeline {
+  position: relative;
+  padding-left: 40px;
+}
+.timeline::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 20px;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(#007bff, #87cefa);
+  border-radius: 2px;
+}
+
+/* Tag/label pill */
+.label-pill {
+  display: inline-block;
+  background: #e0eaff;
+  color: #065fc5;
+  padding: 0.25em 1em;
+  border-radius: 999px;
+  font-size: 90%;
+  margin-right: 0.2em;
+}
+
+/* Button with bounce animation */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0);}
+  50% { transform: translateY(-6px);}
+}
+.btn-bounce:hover {
+  animation: bounce 0.6s;
+}
+
+/* Small vertical divider */
+.v-divider {
+  border-left: 2px solid #e4e4e4;
+  height: 2em;
+  margin: 0 1em;
+  display: inline-block;
+}
+
+/* Custom radio button */
+input[type="radio"].custom-radio:checked + label {
+  color: #007bff;
+  font-weight: 600;
+}
+
+/* Custom switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+.switch input { display: none; }
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  border-radius: 24px;
+  transition: 0.4s;
+}
+.switch input:checked + .switch-slider {
+  background-color: #007bff;
+}
+.switch-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px; width: 18px;
+  left: 3px; bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.4s;
+}
+.switch input:checked + .switch-slider:before {
+  transform: translateX(26px);
+}
+
+/* Avatar stack (if used for multi-user icons) */
+.avatar-stack {
+  display: flex;
+  align-items: center;
+}
+.avatar-stack img {
+  border: 2px solid #fff;
+  border-radius: 50%;
+  margin-left: -14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  width: 36px; height: 36px;
+}
+
+/* Responsive font utility */
+.text-xs { font-size: 0.75rem; }
+.text-sm { font-size: 0.88rem; }
+.text-lg { font-size: 1.3rem; }
+.text-xl { font-size: 1.7rem; }
+
+/* Print-specific: hide nav on print */
+@media print {
+  nav, .navbar, .sidebar, .footer { display: none !important; }
+}
+
+/* Utility class for custom horizontal rule */
+.hr-custom {
+  border: 0;
+  border-top: 2px dashed #007bff;
+  margin: 1.8em 0;
+}
+
+/* Subtle animation for flash message */
+@keyframes flash-in {
+  from { opacity: 0; transform: translateY(-10px);}
+  to { opacity: 1; transform: none;}
+}
+.flash-message {
+  animation: flash-in 0.5s;
+}

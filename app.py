@@ -27,5 +27,9 @@ application.register_blueprint(share_bp)
 application.register_blueprint(market_bp)
 application.register_blueprint(dashboard_bp)
 
+@application.route('/ping')
+def ping():
+    return "pong"
+
 if __name__ == '__main__':
     application.run(host='0.0.0.0', port=5000, debug=True)
