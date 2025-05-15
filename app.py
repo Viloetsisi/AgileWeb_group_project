@@ -17,9 +17,10 @@ from model import db, User, Profile, Document, PasswordResetToken, SharedWith, V
 from flask_mail import Mail, Message
 from flask_migrate import Migrate  # ✅ Added
 from datetime import datetime
+from forms import SignupForm, LoginForm, ForgotPasswordForm, ResetPasswordForm, ProfileForm, DocumentUploadForm, JobHistoryForm
+
 
 import requests
-from forms import JobHistoryForm
 
 # ---------------------------------
 # App Initialization
@@ -511,7 +512,23 @@ def jobs():
     user_id = session.get('user_id')
     if not user_id:
         return redirect(url_for('login'))
-
+    form = JobHistoryForm()
+    history = JobHistory.query.filter_by(user_id=user_id).all()
+    if form.validate_on_submit():
+        job = JobHistory(
+            user_id=user_id,
+            company_name=form.company_name.data,
+            position=form.position.data,
+            start_date=form.start_date.data,
+            end_date=form.end_date.data,
+            salary=form.salary.data,
+            description=form.description.data
+        )
+        db.session.add(job)
+        db.session.commit()
+        flash("Job history uploaded successfully!", "success")
+        return redirect(url_for('jobs'))
+    return render_template('jobs.html', history=history, form=form)
 
 
 @application.route('/profile')
@@ -571,8 +588,8 @@ def career_market():
 
     url = "https://jsearch.p.rapidapi.com/search"
     headers = {
-        'x-rapidapi-key': "4797b66196msh6bc26e180733e9ap1277d3jsn7f80a962b427",
-        'x-rapidapi-host': "jsearch.p.rapidapi.com"
+        "x-rapidapi-key": "96ffa33c88msh8ee305b187870b3p169acejsn6d12679ffd71",
+        "x-rapidapi-host": "jsearch.p.rapidapi.com"
     }
 
     try:
