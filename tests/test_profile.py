@@ -6,7 +6,7 @@ class ProfileTestCase(unittest.TestCase):
     def setUp(self):
         self.app = application
         self.app.config['TESTING'] = True
-        self.app.config['WTF_CSRF_ENABLED'] = False  # Disable CSRF protection for testing
+        self.app.config['WTF_CSRF_ENABLED'] = False  # ✅ 关闭 CSRF 校验
         self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://'
         self.client = self.app.test_client()
         with self.app.app_context():
@@ -15,8 +15,6 @@ class ProfileTestCase(unittest.TestCase):
             db.session.add(u)
             db.session.commit()
             self.user_id = u.id
-
-            # Simulate a logged-in user session
             with self.client.session_transaction() as sess:
                 sess['user_id'] = self.user_id
 
