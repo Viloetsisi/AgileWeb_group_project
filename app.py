@@ -17,6 +17,8 @@ from model import db, User, Profile, Document, PasswordResetToken, SharedWith, V
 from flask_mail import Mail, Message
 from flask_migrate import Migrate  # ✅ Added
 from datetime import datetime
+from forms import SignupForm, LoginForm, ForgotPasswordForm, ResetPasswordForm, ProfileForm, DocumentUploadForm, JobHistoryForm
+
 
 import requests
 
@@ -55,17 +57,18 @@ migrate = Migrate(application, db)  # ✅ Added
 # ---------------------------------
 @application.route('/signup', methods=['GET', 'POST'])
 def signup():
-    if request.method == 'POST':
-        username = request.form['username'].strip()
-        email    = request.form['email'].strip()
-        pwd      = request.form['password']
-        confirm  = request.form['confirm_password']
-        if pwd != confirm:
-            flash("Passwords do not match.", "danger")
-            return redirect(url_for('signup'))
-        if User.query.filter((User.username==username)|(User.email==email)).first():
+    form = SignupForm()
+    if form.validate_on_submit():
+        username = form.username.data.strip()
+        email = form.email.data.strip()
+        pwd = form.password.data
+
+        # Check for existing username or email
+        if User.query.filter((User.username == username) | (User.email == email)).first():
             flash("Username or email already taken.", "danger")
             return redirect(url_for('signup'))
+
+        # Create and save new user
         user = User(
             username=username,
             email=email,
@@ -75,16 +78,19 @@ def signup():
         db.session.commit()
         flash("Account created! Please log in.", "success")
         return redirect(url_for('login'))
-    return render_template('signup.html')
+
+    # GET or validation failed (e.g., passwords don’t match handled by form)
+    return render_template('signup.html', form=form)
 
 # ---------------------------------
 # Login / Logout
 # ---------------------------------
 @application.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        ident = request.form['username'].strip()
-        pwd   = request.form['password']
+    form = LoginForm()
+    if form.validate_on_submit():
+        ident = form.username.data.strip()
+        pwd   = form.password.data
         user  = User.query.filter(
             (User.username==ident)|(User.email==ident)
         ).first()
@@ -96,7 +102,7 @@ def login():
             return redirect(url_for('dashboard'))
         flash("Invalid user or password.", "danger")
         return redirect(url_for('login'))
-    return render_template('login.html')
+    return render_template('login.html', form=form)
 
 @application.route('/logout')
 def logout():
@@ -122,18 +128,23 @@ def reset_link_sent():
 
 @application.route('/forgot-password', methods=['GET'])
 def forgot_password_get():
-    return render_template('forgot_password.html')
+    form = ForgotPasswordForm()
+    return render_template('forgot_password.html',form =form) 
 
 @application.route('/forgot-password', methods=['POST'])
 def forgot_password_post():
-    email = request.form['email'].strip()
-    user  = User.query.filter_by(email=email).first()
-    if user:
-        token_row = PasswordResetToken.generate(user.id, ttl_minutes=30)
-        db.session.add(token_row)
-        db.session.commit()
-        _send_reset_email(user, token_row)
-    return redirect(url_for('reset_link_sent'))
+    form = ForgotPasswordForm()
+    if form.validate_on_submit():
+        email = form.email.data.strip()
+        user  = User.query.filter_by(email=email).first()
+        if user:
+            token_row = PasswordResetToken.generate(user.id, ttl_minutes=30)
+            db.session.add(token_row)
+            db.session.commit()
+            _send_reset_email(user, token_row)
+        return redirect(url_for('reset_link_sent'))
+    # If validation fails, re-render the forgot password page with errors
+    return render_template('forgot_password.html', form=form)
 
 @application.route('/reset/<token>', methods=['GET'])
 def reset_get(token):
@@ -141,28 +152,25 @@ def reset_get(token):
     if not tok or not tok.is_valid():
         flash("Invalid or expired reset link.", "danger")
         return redirect(url_for('login'))
-    return render_template('reset_password.html', token=token)
+    form = ResetPasswordForm()
+    return render_template('reset_password.html', token=token, form=form)
 
-@application.route('/reset/<token>', methods=['POST'])
-def reset_post(token):
-    tok = PasswordResetToken.query.filter_by(token=token, used=False).first()
+@application.route('/reset/<token>', methods=['GET', 'POST'])
+def reset(token):
+    tok = PasswordResetToken.query.filter_by(token=token).first()
     if not tok or not tok.is_valid():
-        flash("Reset link invalid or expired.", "danger")
+        flash("Invalid or expired reset link.", "danger")
         return redirect(url_for('login'))
-
-    pw  = request.form['password']
-    cfm = request.form['confirm']
-    if pw != cfm or len(pw) < 6:
-        flash("Passwords must match and be at least 6 characters.", "danger")
-        return redirect(url_for('reset_get', token=token))
-
-    user = User.query.get(tok.user_id)
-    user.password = generate_password_hash(pw)
-    tok.used = True
-    db.session.commit()
-
-    flash("Password updated! Please log in.", "success")
-    return redirect(url_for('login'))
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        pw  = form.password.data
+        user = User.query.get(tok.user_id)
+        user.password = generate_password_hash(pw)
+        tok.used = True
+        db.session.commit()
+        flash("Password updated! Please log in.", "success")
+        return redirect(url_for('login'))
+    return render_template('reset_password.html', form=form, token=token)
 
 # ---------------------------------
 # Index and Dashboard
@@ -230,46 +238,16 @@ def edit_profile():
     user_id = session.get('user_id')
     if not user_id:
         return redirect(url_for('login'))
-
     prof = Profile.query.filter_by(user_id=user_id).first() or Profile(user_id=user_id)
-
-    if request.method == 'POST':
-        prof.full_name = request.form.get('full_name')
-        prof.age       = request.form.get('age', type=int)
-        bd = request.form.get('birth_date')
-        if bd:
-            prof.birth_date = datetime.strptime(bd, '%Y-%m-%d').date()
-
-        prof.education = request.form.get('education')
-        prof.gpa       = request.form.get('gpa')  # ← added
-
-        prof.school          = request.form.get('school')
-        gd = request.form.get('graduation_date')
-        if gd:
-            prof.graduation_date = datetime.strptime(gd, '%Y-%m-%d').date()
-
-        prof.expected_company   = request.form.get('expected_company')
-        prof.career_goal        = request.form.get('career_goal')
-        prof.self_description   = request.form.get('self_description')
-        prof.internship_experience = request.form.get('internship_experience')
-        prof.is_shared            = 'is_shared' in request.form
-
-        # ← new fields below
-        prof.coding_c      = 'coding_c'      in request.form
-        prof.coding_cpp    = 'coding_cpp'    in request.form
-        prof.coding_java   = 'coding_java'   in request.form
-        prof.coding_sql    = 'coding_sql'    in request.form
-        prof.coding_python = 'coding_python' in request.form
-
-        prof.communication_skill = request.form.get('communication_skill', type=int) or 0
-        prof.working_experience  = request.form.get('working_experience',  type=int) or 0
-
+    form = ProfileForm(obj=prof)
+    if form.validate_on_submit():
+        form.populate_obj(prof)  # Will fill all fields automatically
         db.session.add(prof)
         db.session.commit()
         flash('Profile updated successfully.', 'success')
         return redirect(url_for('profile_view'))
+    return render_template('edit_profile.html', form=form, profile=prof)
 
-    return render_template('edit_profile.html', profile=prof)
 
 # Upload document only
 @application.route('/upload_document', methods=['GET', 'POST'])
@@ -277,14 +255,13 @@ def upload_document():
     user_id = session.get('user_id')
     if not user_id:
         return redirect(url_for('login'))
-
-    if request.method == 'POST':
-        file = request.files.get('data_file')
+    form = DocumentUploadForm()
+    if form.validate_on_submit():
+        file = form.data_file.data
         if file and file.filename:
             filename = secure_filename(file.filename)
             save_path = os.path.join(application.config['UPLOAD_FOLDER'], filename)
             file.save(save_path)
-
             doc = Document(
                 user_id=user_id,
                 file_name=filename,
@@ -297,10 +274,9 @@ def upload_document():
             flash('Document uploaded successfully.', 'success')
         else:
             flash('No file selected.', 'danger')
-
         return redirect(url_for('profile_view'))
+    return render_template('upload_document.html', form=form)
 
-    return render_template('upload_document.html')
 
 
 # Delete document
@@ -531,13 +507,28 @@ def shared():
         viz_owners=viz_owners
     )
 
-@application.route('/jobs', methods=['GET'])
+@application.route('/jobs', methods=['GET', 'POST'])
 def jobs():
     user_id = session.get('user_id')
     if not user_id:
         return redirect(url_for('login'))
+    form = JobHistoryForm()
     history = JobHistory.query.filter_by(user_id=user_id).all()
-    return render_template('jobs.html', history=history)
+    if form.validate_on_submit():
+        job = JobHistory(
+            user_id=user_id,
+            company_name=form.company_name.data,
+            position=form.position.data,
+            start_date=form.start_date.data,
+            end_date=form.end_date.data,
+            salary=form.salary.data,
+            description=form.description.data
+        )
+        db.session.add(job)
+        db.session.commit()
+        flash("Job history uploaded successfully!", "success")
+        return redirect(url_for('jobs'))
+    return render_template('jobs.html', history=history, form=form)
 
 
 @application.route('/profile')
@@ -565,42 +556,6 @@ def get_job_history(user_id):
         for h in history
     ])
     
-# ---------------------------------
-# Job History Upload
-# ---------------------------------    
-@application.route('/upload_job_history', methods=['POST'])
-def upload_job_history():
-    user_id = session.get('user_id')
-    if not user_id:
-        return redirect(url_for('login'))
-
-    company_name = request.form.get('company_name')
-    position = request.form.get('position')
-    description = request.form.get('description')
-
-    # Parse dates safely
-    start_date_raw = request.form.get('start_date')
-    end_date_raw = request.form.get('end_date')
-    start_date = datetime.strptime(start_date_raw, '%Y-%m-%d').date() if start_date_raw else None
-    end_date = datetime.strptime(end_date_raw, '%Y-%m-%d').date() if end_date_raw else None
-    salary = request.form.get('salary')
-
-    job = JobHistory(
-        user_id=user_id,
-        company_name=company_name,
-        position=position,
-        start_date=start_date,
-        end_date=end_date,
-        description=description,
-        salary=salary
-        
-    )
-
-    db.session.add(job)
-    db.session.commit()
-
-    flash("Job history uploaded successfully!", "success")
-    return redirect(url_for('jobs'))
 
 # ---------------------------------
 # Career Market
