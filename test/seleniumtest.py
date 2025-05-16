@@ -44,7 +44,7 @@ class SeleniumTests(unittest.TestCase):
         self.driver.get(self.base_url + "/login")
         self.driver.find_element(By.NAME, "username").send_keys(self.username)
         self.driver.find_element(By.NAME, "password").send_keys(self.password)
-        self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+        self.driver.find_element(By.CSS_SELECTOR, "input[type='submit'], button[type='submit']").click()
         WebDriverWait(self.driver, 5).until_not(EC.url_contains("/login"))
 
     def test_1_signup_then_login(self):
@@ -55,7 +55,7 @@ class SeleniumTests(unittest.TestCase):
         self.driver.find_element(By.NAME, "confirm_password").send_keys(self.password)
 
         submit_btn = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']"))
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='submit'], button[type='submit']"))
         )
         self.driver.execute_script("arguments[0].scrollIntoView(true);", submit_btn)
         time.sleep(0.2)
@@ -84,7 +84,7 @@ class SeleniumTests(unittest.TestCase):
         self.driver.find_element(By.NAME, "full_name").send_keys("Selenium Test User")
         self.driver.find_element(By.NAME, "age").clear()
         self.driver.find_element(By.NAME, "age").send_keys("22")
-        self.driver.find_element(By.NAME, "birth_date").send_keys("22-01-2001")
+        self.driver.find_element(By.NAME, "birth_date").send_keys("2001-01-22")
 
         Select(self.driver.find_element(By.NAME, "education")).select_by_visible_text("Bachelor")
         Select(self.driver.find_element(By.NAME, "gpa")).select_by_visible_text("HD")
@@ -92,13 +92,13 @@ class SeleniumTests(unittest.TestCase):
         Select(self.driver.find_element(By.NAME, "working_experience")).select_by_visible_text("2 years")
 
         self.driver.find_element(By.NAME, "school").send_keys("Test University")
-        self.driver.find_element(By.NAME, "graduation_date").send_keys("23-12-2001")
+        self.driver.find_element(By.NAME, "graduation_date").send_keys("2001-01-22")
         self.driver.find_element(By.NAME, "career_goal").send_keys("Software Engineer")
         self.driver.find_element(By.NAME, "self_description").send_keys("I am a test user.")
         self.driver.find_element(By.NAME, "internship_experience").send_keys("Intern at Test Inc.")
 
         submit_btn = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']"))
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='submit'], button[type='submit']"))
         )
         self.driver.execute_script("arguments[0].click();", submit_btn)
 
@@ -120,7 +120,7 @@ class SeleniumTests(unittest.TestCase):
             EC.presence_of_element_located((By.NAME, "data_file"))
         )
         self.driver.find_element(By.NAME, "data_file").send_keys(test_file_path)
-        self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+        self.driver.find_element(By.CSS_SELECTOR, "input[type='submit'], button[type='submit']").click()
 
         self.assertIn("Document uploaded successfully", self.driver.page_source)
         os.remove(test_file_path)
@@ -135,13 +135,13 @@ class SeleniumTests(unittest.TestCase):
 
         self.driver.find_element(By.NAME, "company_name").send_keys("TestCorp Pty Ltd")
         self.driver.find_element(By.NAME, "position").send_keys("Test Engineer")
-        self.driver.find_element(By.NAME, "start_date").send_keys("01-01-2001")
-        self.driver.find_element(By.NAME, "end_date").send_keys("20-01-2020")
+        self.driver.find_element(By.NAME, "start_date").send_keys("2001-01-01")
+        self.driver.find_element(By.NAME, "end_date").send_keys("2200-01-20")
         self.driver.find_element(By.NAME, "salary").send_keys("75000")
         self.driver.find_element(By.NAME, "description").send_keys("Worked on testing systems.")
 
         submit_btn = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']"))
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='submit'], input[type='submit'], button[type='submit']"))
         )
         self.driver.execute_script("arguments[0].click();", submit_btn)
 
