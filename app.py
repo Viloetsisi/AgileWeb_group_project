@@ -588,7 +588,7 @@ def career_market():
 
     url = "https://jsearch.p.rapidapi.com/search"
     headers = {
-        "x-rapidapi-key": "96ffa33c88msh8ee305b187870b3p169acejsn6d12679ffd71",
+        "x-rapidapi-key": "4797b66196msh6bc26e180733e9ap1277d3jsn7f80a962b427",
         "x-rapidapi-host": "jsearch.p.rapidapi.com"
     }
 
