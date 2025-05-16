@@ -6,7 +6,7 @@ class JobTestCase(unittest.TestCase):
     def setUp(self):
         self.app = application
         self.app.config['TESTING'] = True
-        self.app.config['WTF_CSRF_ENABLED'] = False  # ✅ 关闭 CSRF 验证
+        self.app.config['WTF_CSRF_ENABLED'] = False  # Disable CSRF protection for testing
         self.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://'
         self.client = self.app.test_client()
 
@@ -17,7 +17,7 @@ class JobTestCase(unittest.TestCase):
             db.session.commit()
             self.user_id = user.id
 
-            # 模拟登录状态
+            # Simulate a logged-in user session
             with self.client.session_transaction() as sess:
                 sess['user_id'] = self.user_id
 
@@ -38,7 +38,7 @@ class JobTestCase(unittest.TestCase):
 
         self.assertIn(b'Job history uploaded successfully', rv.data)
 
-        # 检查数据库记录是否写入
+        # Check if the job history record was saved in the database
         with self.app.app_context():
             job = JobHistory.query.filter_by(user_id=self.user_id).first()
             self.assertIsNotNone(job)
