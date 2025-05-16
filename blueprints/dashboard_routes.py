@@ -72,13 +72,13 @@ def visualize():
         ).first()
         if not allowed:
             flash("You’re not authorized to view that dashboard.", "danger")
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('dashboard.dashboard'))
 
     # 4. Load the owner's profile and documents
     profile = Profile.query.filter_by(user_id=owner_id).first()
     if not profile:
         flash("No profile found. Please complete your profile before visualizing.", "warning")
-        return redirect(url_for('edit_profile'))
+        return redirect(url_for('profile.edit_profile'))
 
     docs = Document.query.filter_by(user_id=owner_id).all()
 
