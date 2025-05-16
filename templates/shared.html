@@ -35,7 +35,7 @@
     <ul class="list-group">
       {% for user in viz_owners %}
       <li class="list-group-item">
-        <a href="{{ url_for('visualize') }}?user={{ user.id }}">
+        <a href="{{ url_for('dashboard.visualize') }}?user={{ user.id }}">
           {{ user.username }}’s Dashboard
         </a>
       </li>

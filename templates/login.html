@@ -16,7 +16,7 @@
     <div class="mb-3">
       <label for="password" class="form-label">
         {{ form.password.label.text }}
-        <a href="{{ url_for('forgot_password_get') }}">Forgot password?</a>
+        <a href="{{ url_for('auth.forgot_password') }}">Forgot password?</a>
       </label>
       {{ form.password(class="form-control") }}
       {% for error in form.password.errors %}
@@ -26,7 +26,7 @@
     {{ form.submit(class="btn btn-primary w-100") }}
   </form>
   <p class="text-center text-muted mt-3">
-    Don’t have an account? <a href="{{ url_for('signup') }}">Sign Up</a>
+    Don’t have an account? <a href="{{ url_for('auth.signup') }}">Sign Up</a>
   </p>
 </div>
 {% endblock %}
