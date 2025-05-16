@@ -4,7 +4,7 @@
   <h2>Career Market: Find Your Next Job</h2>
 
   <!-- Job Search Form -->
-  <form method="get" action="{{ url_for('career_market') }}" class="mb-4">
+  <form method="get" action="{{ url_for('market.career_market') }}" class="mb-4">
     <div class="row">
       <div class="col-md-6">
         <input type="text" class="form-control" name="job_title" placeholder="Job title (e.g. Developer, Data Scientist)" value="{{ job_title }}">
