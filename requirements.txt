@@ -4,3 +4,7 @@ SQLAlchemy>=1.4
 pytest>=7.0
 Flask-Mail==0.10.0
 requests
+flask-migrate 
+flask-wtf 
+email_validator
+selenium
