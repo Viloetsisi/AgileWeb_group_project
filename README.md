@@ -1,5 +1,7 @@
 
 
+
+
 # PathFinder – Student Career Companion
 
 ## 📌 Project Overview
@@ -19,41 +21,36 @@ This application satisfies all required project criteria:
 ## 🛠️ Technologies Used
 
 ### Core Technologies
+- Python (Flask)
 - HTML
-- CSS via Tailwind
-- JavaScript with jQuery
-- Flask (Python)
-- SQLite via SQLAlchemy
+- CSS (Bootstrap 5)
+- JavaScript (vanilla & Chart.js)
+- SQLAlchemy (with SQLite)
 - AJAX for asynchronous updates
 
 ### Optional Libraries
+- Flask-WTF, Flask-Mail
 - Chart.js – for visualizing data
+- python-dotenv – for environment variables
 - Font Awesome – for icons
-- (Optional) NLP tools such as spaCy or NLTK – for resume processing
 
 *Only technologies permitted by the project specification are used.*
 
 ## 👥 Group Members
 
 | UWA ID     | Name           | GitHub Username |
-|------------|----------------|------------------|
-| 24194872   | Mengxi Li      | Viloetsisi       |
-| 23723494   | Lucy Zhi       | Yutong Zhi       |
-| 23734789   | Feiyue Zhang   | Feiyue222        |
-| 23723494   | Kean Scott     | keanscott        |
-
-
-
+|------------|----------------|----------------|
+| 24194872   | Mengxi Li      | Viloetsisi     |
+| 23723494   | Lucy Zhi       | Yutong Zhi     |
+| 23734789   | Feiyue Zhang   | Feiyue222      |
+| 23723494   | Kean Scott     | keanscott      |
 
 ## 🚀 How to Launch
 
 ### 1. Clone the Repository
 ```bash
-
-git clone https://github.com/Viloetsisi/AgileWeb_group_project/pathfinder-app.git
-
-cd pathfinder-app
-```
+git clone https://github.com/Viloetsisi/AgileWeb_group_project.git
+cd AgileWeb_group_project
 
 ### 2. Set Up Virtual Environment
 ```bash
@@ -66,7 +63,18 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 4. Run the Application
+### 4.Database Migration & Initialization
+```bash
+# Initialize migrations folder (only if not exists)
+flask db init
+
+# Generate migration scripts (only if there are model changes)
+flask db migrate -m "Initial migration"
+
+# Apply migrations and create tables
+flask db upgrade
+```
+### 5. Run the Application
 ```bash
 flask run
 ```
@@ -77,7 +85,7 @@ Visit `http://127.0.0.1:5000` in your browser.
 ## 🧪 How to Run Tests
 
 ```bash
-pytest tests/
+python -m unittest discover tests
 ```
 
 > Ensure your virtual environment is activated and Flask environment is properly set.
@@ -87,42 +95,44 @@ pytest tests/
 ## 📂 Project Structure
 
 ```
-
-
-pathfinder-app/
+AgileWeb_group_project/
 ├── app.py                   # Main Flask application
-├── requirements.txt         # Python dependencies                  
-├── project-signup.py        # Entry point for running the app
+├── config.py                # Configuration settings
 ├── requirements.txt         # Python dependencies
-├── README.md                # Project overview & instructions
-├── .gitignore               # Files/folders to ignore in Git
-├── LICENSE                  # MIT License
+├── .env                     # Environment variables (DO NOT COMMIT)
+├── .gitignore
+├── uploads                  # store the upload files
+│
+├── blueprints/              # Modular route handlers (Flask Blueprints)
+│   ├── auth_routes.py
+│   ├── profile_routes.py
+│   ├── jobs_routes.py
+│   ├── share_routes.py
+│   ├── market_routes.py
+│   └── dashboard_routes.py
 │
 ├── templates/               # HTML templates
-│   ├── base.html            # Base layout (navbar, footer, etc.)
-│   ├── index.html           # Introductory view
-│   ├── upload.html          # Upload Data view
-│   ├── visualize.html       # Visualise Data view
-│   ├── login.html           # Login page
-│   ├── signup.html          # Signup page
-│   ├── profile.html         # User profile page
-│   ├── dashboard.html       # Dashboard for visualizing data
-│   └── share.html           # Share Data view
+│   ├── base.html
+│   ├── index.html
+│   ├── upload_document.html
+│   ├── visualize.html
+│   ├── login.html
+│   ├── signup.html
+│   ├── profile.html
+│   ├── dashboard.html
+│   ├── jobs.html
+│   └── share.html
 │
-├── static/                  # Static assets
+├── static/                  # Static assets (CSS, JS, images)
 │   ├── css/
-│   │   └── styles.css       # Tailwind overrides or custom styles
 │   ├── js/
-│   │   └── scripts.js       # AJAX calls, interactivity
-│   └── images/              # Logo, placeholders, etc.
+│   └── images/
 │
 ├── tests/                   # Automated tests
-│   ├── conftest.py          # pytest fixtures (e.g. test client)
-│   ├── test_auth.py         # Signup/Login tests
-│   ├── test_upload.py       # Data upload tests
-│   ├── test_visualize.py    # Visualization logic tests
-│   └── test_share.py        # Sharing functionality tests
-│
-└── deliverables/            # Materials for lab presentations
-    ├── gui_design/          # Static HTML/CSS mockups
-    └── demo_prototype/      # Screenshots or small demo notes
+│   ├── test_auth.py
+│   ├── test_dashboard.py
+│   ├── test_jobs.py
+|   ├── test_profile.py
+│   └── test_share.py
+
+
