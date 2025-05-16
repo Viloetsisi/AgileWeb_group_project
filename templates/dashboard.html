@@ -46,16 +46,16 @@
   <!-- Quick Actions -->
   <div class="row g-3 mb-5">
     <div class="col-md-3">
-      <a href="{{ url_for('upload_document') }}" class="btn btn-primary w-100">Upload Data</a>
+      <a href="{{ url_for('profile.upload_document') }}" class="btn btn-primary w-100">Upload Data</a>
     </div>
     <div class="col-md-3">
-      <a href="{{ url_for('visualize') }}" class="btn btn-secondary w-100">View Job-Fit</a>
+      <a href="{{ url_for('dashboard.visualize') }}" class="btn btn-secondary w-100">View Job-Fit</a>
     </div>
     <div class="col-md-3">
-      <a href="{{ url_for('jobs') }}" class="btn btn-warning w-100">My Jobs</a>
+      <a href="{{ url_for('jobs.jobs') }}" class="btn btn-warning w-100">My Jobs</a>
     </div>
     <div class="col-md-3">
-      <a href="{{ url_for('share') }}" class="btn btn-info w-100">Share with Others</a>
+      <a href="{{ url_for('share.share') }}" class="btn btn-info w-100">Share with Others</a>
     </div>
   </div>
 </div>
